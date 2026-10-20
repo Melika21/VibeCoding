@@ -19,6 +19,10 @@ final class RCS_Database_Installer {
 	}
 
 	public static function maybe_upgrade() {
+		if ( ! get_option( 'rcs_version' ) ) {
+			return;
+		}
+
 		$installed = get_option( 'rcs_db_version' );
 
 		if ( RCS_DB_VERSION === $installed ) {
