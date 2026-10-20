@@ -98,6 +98,13 @@
 | `elementor/Elementor.php` | اتصال به لایه یکپارچه‌سازی المنتور |
 | `elementor/widgets/FormWidget.php` | ویجت فرم: انتخاب فرم، عنوان/توضیح، متن دکمه، چیدمان ستون‌ها |
 | `includes/Integrations/Elementor/ElementorIntegration.php` | تشخیص المنتور، ثبت دسته `rcs`، ثبت ویجت (در try/catch) |
+| `includes/Integrations/SMSIr/SmsIrClient.php` | ارتباط با API سرویس‌دهنده: احراز هویت، ارسال Pattern، پاسخ و خطای سرویس‌دهنده |
+| `includes/SMS/SmsManager.php` | منطق پیامک: ساخت رکورد، ارسال به مشتری/مدیر، نرمال‌سازی شماره، خواندن رکوردها |
+| `includes/SMS/SmsTemplateManager.php` | انواع پیامک، شناسه Pattern و نگاشت پارامترها |
+| `includes/SMS/SmsSender.php` | ارسال یک رکورد از طریق کلاینت سرویس‌دهنده |
+| `includes/SMS/SmsRetry.php` | تلاش مجدد روی همان رکورد پیامک ناموفق |
+| `admin/pages/SmsPage.php` | صفحه تنظیمات و تاریخچه پیامک + عملیات تلاش مجدد (با nonce و کپسیتی) |
+| `admin/views/sms/index.php` | فرم تنظیمات SMS.ir و جدول تاریخچه پیامک‌ها |
 | `includes/Integrations/WooCommerce/WooCommerceIntegration.php` | تشخیص ووکامرس + جای قلاب‌های ووکامرس |
 | `includes/Integrations/SMSIr/SmsIrClient.php` | نگهداری کلاینت SMS.ir (فعلاً فقط بررسی پیکربندی) |
 | `includes/Requests/RequestStatus.php` | ثابت‌های وضعیت درخواست |
@@ -105,7 +112,7 @@
 
 ### ۳.۲ فقط اسکلت (کلاس خالی، بدون منطق)
 
-`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Approval_ApprovalManager`، `RCS_Approval_ApprovalValidator`، `RCS_Coupons_CouponManager`، `RCS_Coupons_CouponValidator`، `RCS_Coupons_CouponOwnership`، `RCS_Coupons_WooCommerceCoupon`، `RCS_SMS_SmsManager`، `RCS_SMS_SmsTemplateManager`، `RCS_SMS_SmsSender`، `RCS_SMS_SmsRetry`، `RCS_Reports_ReportManager`.
+`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Approval_ApprovalManager`، `RCS_Approval_ApprovalValidator`، `RCS_Coupons_CouponManager`، `RCS_Coupons_CouponValidator`، `RCS_Coupons_CouponOwnership`، `RCS_Coupons_WooCommerceCoupon`، `RCS_Reports_ReportManager`.
 
 **قانون:** هر کلاس اسکلت، بدنه خالی دارد و فقط `instance()` دارد. منطق کسب‌وکار را داخل همین کلاس‌ها بنویسید، نه در فایل/کلاس جدید.
 
@@ -137,6 +144,64 @@
 - ارسال فرم **درخواست/نسخه ایجاد نمی‌کند**؛ فقط اعتبارسنجی و ثبت لاگ انجام می‌شود. ساخت Request و Revision در فاز ماژول Requests انجام خواهد شد.
 - منطق شرطی، چندمرحله‌ای و آپلود فایل (اعتبارسنجی MIME/حجم) هنوز پیاده نشده‌اند.
 - استایل ادیتور المنتور (لحظه‌ای) برای ویجت اضافه نشده است.
+
+---
+
+## ۳.۴ قابلیت پیاده‌سازی‌شده: پیامک SMS.ir
+
+### قرارداد سرویس‌دهنده
+
+```text
+Endpoint : POST https://api.sms.ir/v1/send/verify
+Headers  : x-api-key: <API key> | Content-Type: application/json | Accept: text/plain
+Body     : { "mobile": "9120000000", "templateId": 111111, "parameters": [ { "name": "Code", "value": "1234" } ] }
+Response : { "status": 1, "message": "موفق", "data": { "messageId": 89545112, "cost": 1.0 } }
+```
+
+- پیامک **الگویی (Pattern)** است؛ متن پیام هرگز در افزونه ذخیره یا ارسال نمی‌شود.
+- کد وضعیت سرویس‌دهنده: `1` موفق، `0` خطای سامانه، `10` کلید نامعتبر، `11` کلید غیرفعال، `12` محدود به IP.
+- کدهای HTTP: ۲۰۰ موفق، ۴۰۰ خطای منطقی، ۴۰۱ احراز هویت، ۴۲۹ تعداد درخواست زیاد، ۵۰۰ خطای غیرمنتظره.
+- ارتباط با HTTP API وردپرس (`wp_remote_request`) انجام می‌شود تا در تست قابل شبیه‌سازی باشد.
+
+### انواع پیامک و الگوها
+
+| نوع | گیرنده | پارامترهای پیش‌فرض |
+|-----|--------|---------------------|
+| `approval_customer` | مشتری | name, discount, expiry |
+| `approval_admin` | مدیر | name, discount, request |
+| `rejection_customer` | مشتری | name, reason |
+| `expiry_reminder_customer` | مشتری | name, expiry |
+
+هر پیامک یک رکورد مستقل در `rcs_sms` است؛ شکست یکی روی دیگری اثر ندارد.
+
+### تنظیمات (option `rcs_sms_settings`)
+
+| کلید | توضیح | ضروری؟ |
+|------|--------|--------|
+| `api_key` | کلید API پنل برنامه‌نویسان SMS.ir (کلید Sandbox هم پذیرفته می‌شود) | برای ارسال لازم |
+| `pattern_ids` | نگاشت نوع پیامک → شناسه Pattern | برای ارسال لازم |
+| `sender_line` | خط ارسال | **اختیاری — بدون ستاره و بدون `required`** |
+| `admin_numbers` | شماره‌های مدیر (هر خط یک شماره) | برای پیامک به مدیر لازم |
+
+نگاشت نام پارامترها در option جداگانه `rcs_sms_parameters` نگهداری می‌شود (نام منطقی → نام پارامتر در قالب سرویس‌دهنده).
+
+> **خط ارسال** چون ارسال Pattern از خط خدماتی ثبت‌شده در پنل انجام می‌شود، در API ارسال پارامتری به نام آن وجود ندارد؛ فیلد آن فقط نگهداری می‌شود و هرگز اجباری نیست.
+
+### قواعد ارسال و تلاش مجدد
+
+- شماره موبایل پیش از ذخیره نرمال می‌شود: `09120000000`، `+989120000000` و `00989120000000` همگی به `9120000000` تبدیل می‌شوند.
+- ارسال به مشتری: `SmsManager::send_to_customer( $type, $recipient, $values, $context )`.
+- ارسال به مدیر: `SmsManager::send_to_admin( $type, $values, $context )` — برای **هر** شماره مدیر یک رکورد جداگانه ساخته و ارسال می‌شود.
+- تلاش مجدد: `SmsRetry::retry( $sms_id )` فقط روی رکورد `failed`، روی **همان رکورد**، با افزایش `retry_count` و ثبت `last_retry_at`.
+- رکورد `sent` دوباره ارسال یا retry نمی‌شود (idempotent).
+- هر ارسال موفق/ناموفق/تلاش مجدد در لاگ ممیزی ثبت می‌شود (`SMS Sent` / `SMS Failed` / `SMS Retried`).
+- ماژول SMS هیچ وابستگی‌ای به Coupons یا Request ندارد؛ گیرنده را caller تعیین می‌کند.
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- ارسال خودکار پیامک‌ها در گردش تأیید/رد (به ماژول Approval وابسته است).
+- گزارش وضعیت تحویل (Delivery) از API سرویس‌دهنده.
+- صف پیامک و زمان‌بندی ارسال.
 
 ---
 
@@ -320,6 +385,7 @@ uninstall.php  (WP_UNINSTALL_PLUGIN تعریف می‌شود) → plugin.php (ب
 | `rcs_sms_settings` | api_key, pattern_ids, sender_line, admin_numbers |
 | `rcs_general_settings` | تنظیمات عمومی |
 | `rcs_requirements_errors` (transient) | خطاهای پیش‌نیاز (۱ ساعت) |
+| `rcs_sms_parameters` | نگاشت نام پارامتر هر نوع پیامک به نام پارامتر در قالب سرویس‌دهنده |
 
 ### ۷.۴ وضعیت‌ها
 
@@ -459,7 +525,7 @@ ApprovalManager
 3. **Revisions** — `RevisionManager` + `RevisionRepository` (شماره‌گذاری نسخه، حفظ تاریخچه)
 4. **Approval** — `ApprovalValidator` سپس `ApprovalManager` (جریان تأیید/رد idempotent)
 5. **Coupons** — `WooCommerceCoupon` (adapter) → `CouponManager` → `CouponValidator` → `CouponOwnership`
-6. **SMS** — `SmsTemplateManager` (mapping پترن‌ها) → `SmsSender` → `SmsIrClient` (API) → `SmsManager` → `SmsRetry`
+6. **SMS** — ✅ **انجام شد**: `SmsTemplateManager` (انواع و نگاشت پارامتر) → `SmsSender` → `SmsIrClient` (API) → `SmsManager` → `SmsRetry` + صفحه تنظیمات و تاریخچه
 7. **Scheduler** — پیاده‌سازی `run_coupon_expiry_reminder` و `run_sms_retry` (idempotent)
 8. **Reports** — `ReportManager` روی همین جدول‌ها
 9. **Forms (تکمیل)** — منطق شرطی (`ConditionalLogic`)، چندمرحله‌ای (`MultiStepManager`)، اعتبارسنجی پیشرفته (`Validation`) و اتصال endpoint ارسال به ساخت Request
@@ -517,7 +583,10 @@ wp eval 'uninstall_plugin("request-coupon-system/plugin.php");'
 | بارگذاری ویجت المنتور | کلاس داخل `if ( class_exists( '\Elementor\Widget_Base' ) )` | بدون المنتور نباید fatal بدهد (باگ واقعی که در تست کشف شد) |
 | `is_dynamic_content()` | با امضای `: bool` | امضای والد در المنتور ۴.۳.۵ `: bool` دارد و ناسازگاری باعث fatal می‌شد |
 | دسته ویجت المنتور | `rcs` از طریق `elementor/elements/categories_registered` | در المنتور ۴.x taxonomy قدیمی دسته‌ها حذف شده است |
-| استفاده از `$wpdb` | در `*Repository` هم مجاز | Repository لایه دسترسی داده است (بند ۳۴ سند معماری) |
+| استفاده از `$wpdb` | در `*Repository` و `SmsManager` هم مجاز | ماژول SMS در ساختار مصوب Repository ندارد، پس دسترسی داده در خود `SmsManager` است (بند ۳۴ سند معماری) |
+| خط ارسال (Sender line) | **اختیاری**، بدون ستاره و بدون `required` | درخواست کاربر؛ ارسال Pattern از خط خدماتی پنل انجام می‌شود و پارامتری به نام خط ارسال در API وجود ندارد |
+| متن پیامک | ذخیره یا ارسال نمی‌شود | بند ۱۸ سند معماری: فقط Pattern ID و نگاشت پارامتر |
+| endpoint سرویس‌دهنده | `POST /v1/send/verify` با هدر `x-api-key` | مستندات رسمی SMS.ir؛ تنها متد مبتنی بر Pattern |
 
 ---
 
