@@ -99,6 +99,12 @@
 | `elementor/widgets/FormWidget.php` | ویجت فرم: انتخاب فرم، عنوان/توضیح، متن دکمه، چیدمان ستون‌ها |
 | `includes/Integrations/Elementor/ElementorIntegration.php` | تشخیص المنتور، ثبت دسته `rcs`، ثبت ویجت (در try/catch) |
 | `includes/Integrations/SMSIr/SmsIrClient.php` | ارتباط با API سرویس‌دهنده: احراز هویت، ارسال Pattern، پاسخ و خطای سرویس‌دهنده |
+| `includes/Coupons/CouponManager.php` | منطق کوپن: صدور، قاعده «یک کوپن برای هر درخواست»، غیرفعال‌سازی، خواندن روابط |
+| `includes/Coupons/CouponValidator.php` | اعتبارسنجی پارامترهای کوپن (درصد، سقف، کاربر، درخواست، یکتایی کد) |
+| `includes/Coupons/CouponOwnership.php` | لایه محدودیت مالکیت: کاربر جاری = مالک کوپن، غیرفعال بودن، انقضا |
+| `includes/Coupons/WooCommerceCoupon.php` | آداپتور API کوپن ووکامرس: ساخت، غیرفعال‌سازی، ویرایش، تولید کد یکتا |
+| `admin/pages/CouponsPage.php` | فهرست کوپن‌های صادرشده + عملیات غیرفعال‌سازی (nonce و کپسیتی `rcs_manage_coupons`) |
+| `admin/views/coupons/index.php` | جدول کوپن‌ها (کد، درخواست، کاربر، درصد، انقضا، وضعیت، عملیات) |
 | `includes/SMS/SmsManager.php` | منطق پیامک: ساخت رکورد، ارسال به مشتری/مدیر، نرمال‌سازی شماره، خواندن رکوردها |
 | `includes/SMS/SmsTemplateManager.php` | انواع پیامک، شناسه Pattern و نگاشت پارامترها |
 | `includes/SMS/SmsSender.php` | ارسال یک رکورد از طریق کلاینت سرویس‌دهنده |
@@ -112,7 +118,7 @@
 
 ### ۳.۲ فقط اسکلت (کلاس خالی، بدون منطق)
 
-`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Approval_ApprovalManager`، `RCS_Approval_ApprovalValidator`، `RCS_Coupons_CouponManager`، `RCS_Coupons_CouponValidator`، `RCS_Coupons_CouponOwnership`، `RCS_Coupons_WooCommerceCoupon`، `RCS_Reports_ReportManager`.
+`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Approval_ApprovalManager`، `RCS_Approval_ApprovalValidator`، `RCS_Reports_ReportManager`.
 
 **قانون:** هر کلاس اسکلت، بدنه خالی دارد و فقط `instance()` دارد. منطق کسب‌وکار را داخل همین کلاس‌ها بنویسید، نه در فایل/کلاس جدید.
 
@@ -243,6 +249,73 @@ Response : { "status": 1, "message": "موفق", "data": { "messageId": 89545112
 - ارسال خودکار پیامک‌ها در گردش تأیید/رد (به ماژول Approval وابسته است).
 - گزارش وضعیت تحویل (Delivery) از API سرویس‌دهنده.
 - صف پیامک و زمان‌بندی ارسال.
+
+---
+
+## ۳.۶ قابلیت پیاده‌سازی‌شده: ماژول کوپن (WooCommerce)
+
+### اصل حاکم
+
+**ووکامرس تنها مرجع کوپن است.** افزونه هیچ موتور تخفیف موازی نمی‌سازد؛ کوپن با `WC_Coupon` ساخته می‌شود و فقط رابطه‌های خودش در `rcs_plugin_coupons` نگهداری می‌شوند.
+
+### تنظیمات کوپن (بند ۱۳ سند معماری)
+
+| قاعده | پیاده‌سازی ووکامرس |
+|-------|---------------------|
+| تخفیف درصدی | `set_discount_type('percent')` + `set_amount()` |
+| سقف تخفیف | `set_maximum_amount()` (خالی = بدون سقف) |
+| شامل همه محصولات | `set_product_ids(array())` و `set_excluded_product_ids(array())` |
+| شامل همه دسته‌ها | `set_product_categories(array())` و `set_excluded_product_categories(array())` |
+| شامل محصولات تخفیف‌دار | `set_exclude_sale_items(false)` |
+| بدون حداقل خرید | `set_minimum_amount('')` |
+| individual use | `set_individual_use(true)` |
+| سقف استفاده کلی = ۱ | `set_usage_limit(1)` |
+| سقف استفاده هر کاربر = ۱ | `set_usage_limit_per_user(1)` |
+| محدود به صاحب کوپن | `set_email_restrictions([ایمیل کاربر])` + لایه مالکیت افزونه |
+| انقضا = ۷ روز پس از تأیید | `set_date_expires(time() + 604800)` |
+| کد یکتا | تولید تصادفی ۱۲ کاراکتری + بررسی یکتایی |
+| فقط یک کوپن برای هر درخواست | بررسی در `issue()` + قید `UNIQUE KEY coupon_request_id` |
+
+> ووکامرس ۱۱.x محدودیت «User ID» ندارد و فقط محدودیت ایمیل را پشتیبانی می‌کند؛ بنابراین محدودیت دقیق User ID در لایه مالکیت افزونه (`rcs_plugin_coupons.user_id` + `CouponOwnership`) اعمال می‌شود — دقیقاً همان‌طور که بند ۱۴ سند معماری توضیح می‌دهد.
+
+### یکتایی کد
+
+`WooCommerceCoupon::code_exists()` با یک کوئری فقط‌خواندنی روی پست‌های `shop_coupon` (همه وضعیت‌ها: publish/trash/draft) بررسی می‌کند تا کد غیرفعال‌شده هم دوباره استفاده نشود. در صورت درخواست کد مشخص، تکراری بودن با `WP_Error` رد می‌شود.
+
+### چرخه حیات
+
+```text
+Not Created → Active (publish) → Used → Expired
+                     ↓
+                Disabled (trash)   ← فقط با کپسیتی rcs_manage_coupons و nonce
+```
+
+- غیرفعال‌سازی از طریق `set_status('trash')` (روش رسمی ووکامرس) انجام می‌شود؛ کوپن حذف نمی‌شود.
+- `CouponOwnership::can_use()` فقط وقتی true است که کوپن غیرفعال نباشد، منقضی نشده باشد و کاربر جاری مالک آن باشد.
+- صدور و غیرفعال‌سازی در لاگ ممیزی ثبت می‌شود (`Coupon Created` / `Coupon Disabled`).
+- متای `_rcs_managed_coupon` روی کوپن ووکامرس ثبت می‌شود؛ فقط همین کوپن‌ها در uninstall حذف می‌شوند.
+
+### API ماژول
+
+```php
+RCS_Coupons_CouponManager::instance()->issue( $request_id, $user_id, array( 'amount' => 20, 'maximum_amount' => 500, 'code' => '' ) );
+// → int (شناسه رابطه) یا WP_Error
+
+RCS_Coupons_CouponManager::instance()->disable( $relation_id );
+// → bool
+
+RCS_Coupons_CouponManager::instance()->get_by_request( $request_id );
+RCS_Coupons_CouponManager::instance()->can_use( $relation_id, $user_id );
+```
+
+> صدور کوپن از گردش تأیید (ماژول Approval) انجام می‌شود و **همیشه به یک درخواست تعلق دارد**؛ کوپن بدون درخواست صادر نمی‌شود (قید UNIQUE روی `request_id` هم این را تضمین می‌کند).
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- ویرایش درصد تخفیف و سقف تخفیف توسط مدیر (بند ۱۶ سند معماری) — آداپتور `update_amount()` آماده است ولی هنوز به رابط پنل وصل نشده.
+- فعال‌سازی دوباره کوپن غیرفعال‌شده (بند ۱۰ مورد ۷ تعیین‌نشده — عمداً پیاده نشده).
+- ثبت «کوپن استفاده شد» و «کوپن منقضی شد» در لاگ (به ووکامرس checkout وابسته است).
+- استفاده از کوپن توسط مشتری در سبد خرید (تست انتها‌به‌انتها با ووکامرس).
 
 ---
 
@@ -565,7 +638,7 @@ ApprovalManager
 2. **Requests** — `RequestManager` + `RequestRepository` + `RequestAccess` (مالکیت/وضعیت) + `DraftManager` ← **قدم بعدی**
 3. **Revisions** — `RevisionManager` + `RevisionRepository` (شماره‌گذاری نسخه، حفظ تاریخچه)
 4. **Approval** — `ApprovalValidator` سپس `ApprovalManager` (جریان تأیید/رد idempotent)
-5. **Coupons** — `WooCommerceCoupon` (adapter) → `CouponManager` → `CouponValidator` → `CouponOwnership`
+5. **Coupons** — ✅ **انجام شد**: `WooCommerceCoupon` (آداپتور API) → `CouponManager` → `CouponValidator` → `CouponOwnership` + صفحه پنل با عملیات غیرفعال‌سازی
 6. **SMS** — ✅ **انجام شد**: `SmsTemplateManager` (انواع و نگاشت پارامتر) → `SmsSender` → `SmsIrClient` (API) → `SmsManager` → `SmsRetry` + صفحه تنظیمات و تاریخچه
 7. **Scheduler** — پیاده‌سازی `run_coupon_expiry_reminder` و `run_sms_retry` (idempotent)
 8. **Reports** — `ReportManager` روی همین جدول‌ها
@@ -577,7 +650,7 @@ ApprovalManager
 
 ## ۱۲. محیط تست و روال اعتبارسنجی
 
-محیط مرجع تست‌شده: **WordPress 7.1.3 + MariaDB 11.8 + PHP 8.4 + WP-CLI**.
+محیط مرجع تست‌شده: **WordPress 7.1.3 + MariaDB 11.8 + PHP 8.4 + WP-CLI + Elementor 4.3.5 + WooCommerce 11.2.1**.
 
 ```bash
 # فعال‌سازی
@@ -631,6 +704,9 @@ wp eval 'uninstall_plugin("request-coupon-system/plugin.php");'
 | endpoint سرویس‌دهنده | `POST /v1/send/verify` با هدر `x-api-key` | مستندات رسمی SMS.ir؛ تنها متد مبتنی بر Pattern |
 | ارسال فرم | فقط برای کاربر واردشده، سراسری | درخواست کاربر؛ مهمان به صفحه ورود هدایت می‌شود و فرم رندر نمی‌شود |
 | ترتیب بررسی امنیتی | احراز هویت قبل از nonce | nonce کاربر واردنشده هم معتبر است؛ بند ۳۸ سند معماری |
+| محدودیت کوپن | ایمیل در ووکامرس + لایه مالکیت با User ID | ووکامرس ۱۱.x محدودیت User ID ندارد؛ بند ۱۴ سند معماری |
+| کد کوپن | تصادفی ۱۲ کاراکتری، بررسی یکتایی در همه وضعیت‌ها | درخواست کاربر: کدها نباید یکسان باشند |
+| غیرفعال‌سازی کوپن | `set_status('trash')` با کپسیتی `rcs_manage_coupons` | روش رسمی ووکامرس؛ کوپن حذف نمی‌شود |
 
 ---
 
