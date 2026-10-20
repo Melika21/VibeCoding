@@ -84,12 +84,20 @@
 | `includes/Scheduler/Scheduler.php` | ثبت/لغو کرون‌های روزانه و ساعتی |
 | `includes/Approval/ExpertRole.php` | ساخت/به‌روزرسانی/حذف نقش `rcs_expert` و کپسیتی‌های آن |
 | `admin/Admin.php` | ثبت منوی پنل + ۶ زیرمنو + نمایش notice خطاهای پیش‌نیاز |
-| `admin/pages/*.php` | ۶ صفحه ادمین: بررسی کپسیتی و رندر ویو |
-| `admin/views/*/index.php` | ویوی placeholder برای هر صفحه (بدون UI نهایی) |
-| `frontend/Frontend.php` | ارکستراتور فرانت (فعلاً فقط هوک assets) |
+| `admin/pages/FormsPage.php` | فرم‌ساز: فهرست فرم‌ها، صفحه ساخت/ویرایش، ذخیره و حذف با nonce و کپسیتی |
+| `admin/views/forms/index.php` | جدول فهرست فرم‌ها |
+| `admin/views/forms/builder.php` | صفحه ساخت فرم: نام، وضعیت، توضیح و ردیف‌های فیلد |
+| `admin/assets/css/rcs-forms.css` + `admin/assets/js/rcs-forms.js` | استایل و اسکریپت فرم‌ساز (افزودن/حذف فیلد) |
+| `includes/Forms/FormManager.php` | منطق فرم: ساخت، ویرایش، حذف، خواندن، فهرست فرم‌های منتشرشده |
+| `includes/Forms/FormRepository.php` | دسترسی داده به `rcs_forms` (درج، به‌روزرسانی، حذف، خواندن، کوئری) |
+| `includes/Forms/FieldManager.php` | تعریف ۱۰ نوع فیلد، ذخیره/خواندن فیلدها، نرمال‌سازی و تولید markup هر فیلد |
+| `includes/Forms/SubmissionHandler.php` | endpoint ارسال فرم: بررسی nonce، اعتبارسنجی مقادیر، ثبت لاگ |
+| `frontend/Frontend.php` | رندر فرم + رجیستر/enqueue استایل فرم + فعال‌سازی endpoint ارسال |
+| `frontend/views/form.php` | قالب HTML فرم (فیلدها، nonce، دکمه ارسال، پیام نتیجه) |
+| `frontend/assets/css/rcs-form.css` | استایل فرم (grid، برچسب، input، notice) |
 | `elementor/Elementor.php` | اتصال به لایه یکپارچه‌سازی المنتور |
-| `elementor/widgets/FormWidget.php` | ویجت فرم (فقط لایه نمایش) |
-| `includes/Integrations/Elementor/ElementorIntegration.php` | تشخیص المنتور + ثبت ویجت (در try/catch) |
+| `elementor/widgets/FormWidget.php` | ویجت فرم: انتخاب فرم، عنوان/توضیح، متن دکمه، چیدمان ستون‌ها |
+| `includes/Integrations/Elementor/ElementorIntegration.php` | تشخیص المنتور، ثبت دسته `rcs`، ثبت ویجت (در try/catch) |
 | `includes/Integrations/WooCommerce/WooCommerceIntegration.php` | تشخیص ووکامرس + جای قلاب‌های ووکامرس |
 | `includes/Integrations/SMSIr/SmsIrClient.php` | نگهداری کلاینت SMS.ir (فعلاً فقط بررسی پیکربندی) |
 | `includes/Requests/RequestStatus.php` | ثابت‌های وضعیت درخواست |
@@ -97,9 +105,38 @@
 
 ### ۳.۲ فقط اسکلت (کلاس خالی، بدون منطق)
 
-`RCS_Forms_FormManager`، `RCS_Forms_FormRepository`، `RCS_Forms_FieldManager`، `RCS_Forms_SubmissionHandler`، `RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Approval_ApprovalManager`، `RCS_Approval_ApprovalValidator`، `RCS_Coupons_CouponManager`، `RCS_Coupons_CouponValidator`، `RCS_Coupons_CouponOwnership`، `RCS_Coupons_WooCommerceCoupon`، `RCS_SMS_SmsManager`، `RCS_SMS_SmsTemplateManager`، `RCS_SMS_SmsSender`، `RCS_SMS_SmsRetry`، `RCS_Reports_ReportManager`.
+`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Approval_ApprovalManager`، `RCS_Approval_ApprovalValidator`، `RCS_Coupons_CouponManager`، `RCS_Coupons_CouponValidator`، `RCS_Coupons_CouponOwnership`، `RCS_Coupons_WooCommerceCoupon`، `RCS_SMS_SmsManager`، `RCS_SMS_SmsTemplateManager`، `RCS_SMS_SmsSender`، `RCS_SMS_SmsRetry`، `RCS_Reports_ReportManager`.
 
 **قانون:** هر کلاس اسکلت، بدنه خالی دارد و فقط `instance()` دارد. منطق کسب‌وکار را داخل همین کلاس‌ها بنویسید، نه در فایل/کلاس جدید.
+
+---
+
+## ۳.۳ قابلیت پیاده‌سازی‌شده: فرم‌ساز + ویجت المنتور
+
+### چه چیزی ساخته شد
+
+- **فرم‌ساز در پنل** (`Request & Coupon > Forms`): فهرست فرم‌ها، ساخت فرم جدید، ویرایش، حذف (با nonce و کپسیتی `rcs_manage_forms`).
+- **تعریف فیلد** با ۱۰ نوع مصوب: text، textarea، number، email، mobile، select، radio، checkbox، date، file — هر فیلد دارای key، label، required، options، step و sort_order.
+- **رندر فرم در فرانت** با قالب `frontend/views/form.php`، nonce، نام فیلدها به شکل `rcs_field[key]` و استایل مستقل `rcs-form`.
+- **ویجت المنتور** `RCS Form` با کنترل‌های: انتخاب فرم (فقط فرم‌های منتشرشده)، نمایش عنوان، نمایش توضیح، متن دکمه ارسال و چیدمان ۱/۲/۳ ستونی. ویجت در دسته‌ی اختصاصی **Request & Coupon** (`rcs`) ظاهر می‌شود.
+- **endpoint ارسال** `admin-post.php?action=rcs_submit_form`: بررسی nonce، اعتبارسنجی فیلدهای الزامی/ایمیل/موبایل، ثبت در لاگ ممیزی و بازگشت با پیام نتیجه.
+
+### سازگاری با المنتور ۴.x (Elementor 4.3.5)
+
+| نکته | تصمیم |
+|-------|--------|
+| کلاس پایه | `extends \Elementor\Widget_Base` (امضای `register( Widget_Base )` در المنتور ۴ تایپ‌هینت دارد) |
+| `is_dynamic_content()` | با امضای `: bool` مطابق والد در المنتور ۴ |
+| لود شدن فایل ویجت | کلاس داخل `if ( class_exists( '\Elementor\Widget_Base' ) )` اعلام شده تا بدون المنتور هرگز fatal ندهد |
+| ثبت دسته | `elementor/elements/categories_registered` + `add_category()` (در ۴.x taxonomy قدیمی `elementor_element_category` حذف شده) |
+| fallback دسته | اگر دسته `rcs` ثبت نشده باشد `general` برگردانده می‌شود (سازگار با ۳.x) |
+| گزینه‌های کنترل SELECT | در فرانت به‌خاطر `Performance::should_optimize_controls()` حذف می‌شوند (رفتار خود المنتور)؛ در ادیتور سالم هستند |
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- ارسال فرم **درخواست/نسخه ایجاد نمی‌کند**؛ فقط اعتبارسنجی و ثبت لاگ انجام می‌شود. ساخت Request و Revision در فاز ماژول Requests انجام خواهد شد.
+- منطق شرطی، چندمرحله‌ای و آپلود فایل (اعتبارسنجی MIME/حجم) هنوز پیاده نشده‌اند.
+- استایل ادیتور المنتور (لحظه‌ای) برای ویجت اضافه نشده است.
 
 ---
 
@@ -315,7 +352,7 @@ SMS → Request logic    Elementor → Coupons  Elementor → SMS
 1. همه کلاس‌ها `final` و singleton با `instance()` و constructor خصوصی (کلاس‌های utility مثل `Activator` فقط متد static دارند).
 2. نام کلاس = `RCS_<Module>_<ClassName>`؛ نام فایل = نام کلاس بدون پیشوند.
 3. **هیچ کامنتی (فارسی یا انگلیسی) داخل کد PHP ننویسید.** تنها استثنا هدر افزونه در `plugin.php` است.
-4. تماس مستقیم با `$wpdb` فقط در `includes/Database/` و `includes/Logs/` مجاز است.
+4. تماس مستقیم با `$wpdb` فقط در `includes/Database/`، `includes/Logs/` و کلاس‌های `*Repository` (لایه دسترسی داده) مجاز است؛ در کلاس‌های Manager و صفحات ادمین ممنوع است.
 5. هر تعامل با وردپرس/ووکامرس/المنتور/سرویس بیرونی داخل `try { } catch ( \Throwable $e ) { }`.
 6. هر کلاس جدید باید به نقشه `RCS_Autoloader::$map` در `plugin.php` اضافه شود، وگرنه بارگذاری نمی‌شود.
 7. Manager = منطق دامنه. Repository = فقط دسترسی داده (بدون تصمیم کسب‌وکاری).
@@ -415,17 +452,17 @@ ApprovalManager
 
 ## ۱۱. نقشه راه فاز بعد (به‌ترتیب پیشنهادی)
 
-هر مرحله را جداگانه پیاده و تست کنید:
+هر مرحله را جداگانه پیاده و تست کنید. مرحله ۱ انجام شده است.
 
-1. **Forms** — `FormManager` (CRUD) + `FormRepository` + `FieldManager` (ساختار فیلدها + sort_order + step)
-2. **Requests** — `RequestManager` + `RequestRepository` + `RequestAccess` (مالکیت/وضعیت) + `DraftManager`
+1. ~~**Forms**~~ — ✅ **انجام شد**: `FormManager` (CRUD) + `FormRepository` + `FieldManager` (۱۰ نوع فیلد) + `SubmissionHandler` + فرم‌ساز پنل + ویجت المنتور
+2. **Requests** — `RequestManager` + `RequestRepository` + `RequestAccess` (مالکیت/وضعیت) + `DraftManager` ← **قدم بعدی**
 3. **Revisions** — `RevisionManager` + `RevisionRepository` (شماره‌گذاری نسخه، حفظ تاریخچه)
 4. **Approval** — `ApprovalValidator` سپس `ApprovalManager` (جریان تأیید/رد idempotent)
 5. **Coupons** — `WooCommerceCoupon` (adapter) → `CouponManager` → `CouponValidator` → `CouponOwnership`
 6. **SMS** — `SmsTemplateManager` (mapping پترن‌ها) → `SmsSender` → `SmsIrClient` (API) → `SmsManager` → `SmsRetry`
 7. **Scheduler** — پیاده‌سازی `run_coupon_expiry_reminder` و `run_sms_retry` (idempotent)
 8. **Reports** — `ReportManager` روی همین جدول‌ها
-9. **Frontend/Elementor** — رندر فرم، endpoint ذخیره/ارسال، ویجت واقعی
+9. **Forms (تکمیل)** — منطق شرطی (`ConditionalLogic`)، چندمرحله‌ای (`MultiStepManager`)، اعتبارسنجی پیشرفته (`Validation`) و اتصال endpoint ارسال به ساخت Request
 10. **UI** — جایگزینی ویوهای placeholder با رابط واقعی
 
 ---
@@ -457,6 +494,11 @@ wp eval 'uninstall_plugin("request-coupon-system/plugin.php");'
 - هر تست جدید باید هم «خروجی بدون خطا» و هم «اثر واقعی در دیتابیس» را بررسی کند.
 - `wp db query` وردپرس را بارگذاری **نمی‌کند**؛ برای تست اثر زمان اجرا از `wp eval` استفاده کنید.
 - `wp plugin delete` قلاب uninstall را اجرا **نمی‌کند**؛ برای تست uninstall از `wp eval 'uninstall_plugin(...)'` استفاده کنید.
+- برای شبیه‌سازی POST در CLI: `$_SERVER['REQUEST_METHOD'] = 'POST'` را ست کنید.
+- برای گرفتن redirect در CLI: فیلتر `wp_redirect` را حذف و با یک closure که exception پرتاب می‌کند جایگزین کنید (`remove_all_filters('wp_redirect')`).
+- برای گرفتن `wp_die` در CLI: فیلتر `wp_die_handler` را با closure‌ای که exception پرتاب می‌کند جایگزین کنید.
+- گزینه‌های کنترل SELECT در المنتور ۴ فقط در زمینه‌ی ادیتور نگهداری می‌شوند؛ در CLI (فرانت) به‌خاطر `Performance::should_optimize_controls()` حذف می‌شوند. برای تست آن‌ها مقدار استاتیک `is_frontend` را با reflection روی `false` بگذارید.
+- تست افزونه باید **دو بار** اجرا شود: یک‌بار با المنتور فعال و یک‌بار با المنتور غیرفعال (برای اطمینان از نبود fatal).
 
 ---
 
@@ -471,6 +513,11 @@ wp eval 'uninstall_plugin("request-coupon-system/plugin.php");'
 | بازسازی جدول بعد از uninstall | غیرفعال | با نیازمندی `rcs_version` در `maybe_upgrade()` |
 | کپسیتی تأیید برای مدیر | ندارد (فعلاً) | بند ۱۰ مورد ۵ تعیین‌نشده |
 | ادمین‌پنل | منو + ۶ صفحه با ویوی placeholder | بدون UI نهایی در این فاز |
+| وضعیت فرم | `draft` / `published` | ویجت المنتور فقط فرم‌های `published` را نشان می‌دهد |
+| بارگذاری ویجت المنتور | کلاس داخل `if ( class_exists( '\Elementor\Widget_Base' ) )` | بدون المنتور نباید fatal بدهد (باگ واقعی که در تست کشف شد) |
+| `is_dynamic_content()` | با امضای `: bool` | امضای والد در المنتور ۴.۳.۵ `: bool` دارد و ناسازگاری باعث fatal می‌شد |
+| دسته ویجت المنتور | `rcs` از طریق `elementor/elements/categories_registered` | در المنتور ۴.x taxonomy قدیمی دسته‌ها حذف شده است |
+| استفاده از `$wpdb` | در `*Repository` هم مجاز | Repository لایه دسترسی داده است (بند ۳۴ سند معماری) |
 
 ---
 
