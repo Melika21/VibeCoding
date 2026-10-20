@@ -26,6 +26,12 @@ final class RCS_Forms_SubmissionHandler {
 	}
 
 	public function handle() {
+		if ( ! is_user_logged_in() ) {
+			$this->redirect_to_login();
+
+			return;
+		}
+
 		$form_id = isset( $_POST['rcs_form_id'] ) ? absint( $_POST['rcs_form_id'] ) : 0;
 		$nonce   = isset( $_POST['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ) : '';
 
@@ -128,6 +134,17 @@ final class RCS_Forms_SubmissionHandler {
 		}
 
 		return $errors;
+	}
+
+	private function redirect_to_login() {
+		$referer = wp_get_referer();
+		$target  = $referer ? $referer : home_url( '/' );
+
+		$url = add_query_arg( 'rcs_login_required', '1', wp_login_url( $target ) );
+
+		wp_safe_redirect( $url );
+
+		exit;
 	}
 
 	private function redirect_back( $form_id, $success, array $errors ) {

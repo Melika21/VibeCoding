@@ -88,6 +88,26 @@
 	background: #fcf0f1;
 }
 
+.rcs-form-login-required {
+	padding: .9em 1.1em;
+	border: 1px solid #dcdcde;
+	border-left: 4px solid #2271b1;
+	background: #f6f7f7;
+}
+
+.rcs-form-login-message {
+	margin: 0 0 .6em;
+}
+
+.rcs-form-login-link {
+	display: inline-block;
+	padding: .5em 1.2em;
+	border-radius: 3px;
+	background: #2271b1;
+	color: #fff;
+	text-decoration: none;
+}
+
 @media (max-width: 782px) {
 	.rcs-layout-2 .rcs-form-fields,
 	.rcs-layout-3 .rcs-form-fields {

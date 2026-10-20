@@ -56,11 +56,23 @@ final class RCS_Frontend_Frontend {
 			)
 		);
 
-		$fields = $form['fields'];
+		$fields     = $form['fields'];
+		$is_member  = is_user_logged_in();
+		$login_url  = $this->get_login_url();
 
 		ob_start();
 		include RCS_PATH . 'frontend/views/form.php';
 
 		return ob_get_clean();
+	}
+
+	public function get_login_url() {
+		$current = home_url( '/' );
+
+		if ( ! empty( $_SERVER['REQUEST_URI'] ) ) {
+			$current = home_url( esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) );
+		}
+
+		return wp_login_url( $current );
 	}
 }
