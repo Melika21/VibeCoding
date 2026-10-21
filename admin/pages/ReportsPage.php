@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class RCS_Admin_Pages_ReportsPage {
 
+	const SLUG = 'request-coupon-system-reports';
+
 	private static $instance = null;
 
 	private $capability = RCS_Core_Plugin::CAP_VIEW_REPORTS;

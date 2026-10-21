@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class RCS_Admin_Pages_CouponsPage {
 
+	const SLUG          = 'request-coupon-system-coupons';
 	const NONCE_DISABLE = 'rcs_disable_coupon';
 
 	private static $instance = null;
@@ -75,8 +76,8 @@ final class RCS_Admin_Pages_CouponsPage {
 		wp_safe_redirect(
 			add_query_arg(
 				array(
-					'page'           => RCS_Admin_Admin::MENU_SLUG,
-					'rcs_disabled'   => 1,
+					'page'         => self::SLUG,
+					'rcs_disabled' => 1,
 				),
 				admin_url( 'admin.php' )
 			)

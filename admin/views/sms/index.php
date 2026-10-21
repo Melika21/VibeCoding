@@ -29,7 +29,7 @@ $rcs_admin_numbers = isset( $rcs_settings['admin_numbers'] ) && is_array( $rcs_s
 
 	<h2><?php esc_html_e( 'SMS.ir connection', 'request-coupon-system' ); ?></h2>
 
-	<form method="post" action="<?php echo esc_url( add_query_arg( array( 'page' => RCS_Admin_Admin::MENU_SLUG ), admin_url( 'admin.php' ) ) ); ?>">
+	<form method="post" action="<?php echo esc_url( add_query_arg( array( 'page' => RCS_Admin_Pages_SmsPage::SLUG ), admin_url( 'admin.php' ) ) ); ?>">
 		<?php wp_nonce_field( RCS_Admin_Pages_SmsPage::NONCE_SAVE ); ?>
 
 		<table class="form-table" role="presentation">
@@ -126,7 +126,7 @@ $rcs_admin_numbers = isset( $rcs_settings['admin_numbers'] ) && is_array( $rcs_s
 				<?php
 				$rcs_retry_url = add_query_arg(
 					array(
-						'page'           => RCS_Admin_Admin::MENU_SLUG,
+						'page'           => RCS_Admin_Pages_SmsPage::SLUG,
 						'rcs_sms_action' => 'retry',
 						'rcs_sms_id'     => (int) $rcs_record['id'],
 						'_wpnonce'       => wp_create_nonce( RCS_Admin_Pages_SmsPage::NONCE_RETRY . '_' . (int) $rcs_record['id'] ),

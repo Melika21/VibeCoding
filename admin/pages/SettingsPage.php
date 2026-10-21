@@ -6,6 +6,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class RCS_Admin_Pages_SettingsPage {
 
+	const SLUG = 'request-coupon-system-settings';
+
 	private static $instance = null;
 
 	private $capability = RCS_Core_Plugin::CAP_MANAGE_SETTINGS;

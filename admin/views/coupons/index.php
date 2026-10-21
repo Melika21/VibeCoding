@@ -60,7 +60,7 @@ $rcs_disabled_now   = isset( $disabled_now ) ? (int) $disabled_now : 0;
 				$rcs_is_disabled = ! empty( $rcs_record['disabled_at'] );
 				$rcs_disable_url = add_query_arg(
 					array(
-						'page'             => RCS_Admin_Admin::MENU_SLUG,
+						'page'             => RCS_Admin_Pages_CouponsPage::SLUG,
 						'rcs_coupon_action' => 'disable',
 						'rcs_coupon_id'     => (int) $rcs_record['id'],
 						'_wpnonce'          => wp_create_nonce( RCS_Admin_Pages_CouponsPage::NONCE_DISABLE . '_' . (int) $rcs_record['id'] ),

@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class RCS_Admin_Pages_SmsPage {
 
+	const SLUG       = 'request-coupon-system-sms';
 	const NONCE_SAVE  = 'rcs_save_sms_settings';
 	const NONCE_RETRY = 'rcs_retry_sms';
 
@@ -142,7 +143,7 @@ final class RCS_Admin_Pages_SmsPage {
 		wp_safe_redirect(
 			add_query_arg(
 				array(
-					'page'      => RCS_Admin_Admin::MENU_SLUG,
+					'page'      => self::SLUG,
 					'rcs_saved' => 1,
 				),
 				admin_url( 'admin.php' )
@@ -169,7 +170,7 @@ final class RCS_Admin_Pages_SmsPage {
 		wp_safe_redirect(
 			add_query_arg(
 				array(
-					'page'         => RCS_Admin_Admin::MENU_SLUG,
+					'page'         => self::SLUG,
 					'rcs_retried'  => 1,
 				),
 				admin_url( 'admin.php' )

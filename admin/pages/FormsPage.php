@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class RCS_Admin_Pages_FormsPage {
 
+	const SLUG         = 'request-coupon-system';
 	const NONCE_SAVE   = 'rcs_save_form';
 	const NONCE_DELETE = 'rcs_delete_form';
 
