@@ -42,10 +42,10 @@ final class RCS_SMS_SmsTemplateManager {
 
 	public function get_default_parameters( $type ) {
 		$defaults = array(
-			self::TYPE_APPROVAL_CUSTOMER        => array( 'name', 'discount', 'expiry' ),
-			self::TYPE_APPROVAL_ADMIN           => array( 'name', 'discount', 'request' ),
+			self::TYPE_APPROVAL_CUSTOMER        => array( 'name', 'code', 'discount', 'expiry' ),
+			self::TYPE_APPROVAL_ADMIN           => array( 'name', 'code', 'discount', 'request' ),
 			self::TYPE_REJECTION_CUSTOMER       => array( 'name', 'reason' ),
-			self::TYPE_EXPIRY_REMINDER_CUSTOMER => array( 'name', 'expiry' ),
+			self::TYPE_EXPIRY_REMINDER_CUSTOMER => array( 'name', 'code', 'expiry' ),
 		);
 
 		if ( ! isset( $defaults[ $type ] ) ) {

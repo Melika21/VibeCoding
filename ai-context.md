@@ -136,6 +136,8 @@
 | `includes/Logs/LogRepository.php` | درج در جدول `rcs_logs` |
 | `includes/Scheduler/Scheduler.php` | ثبت/لغو کرون‌های روزانه و ساعتی |
 | `includes/Approval/ExpertRole.php` | ساخت/به‌روزرسانی/حذف نقش `rcs_expert` و کپسیتی‌های آن |
+| `includes/Approval/ApprovalManager.php` | گردش تأیید: اول صدور کوپن، بعد ساخت و ارسال پیامک مشتری و مدیر |
+| `includes/Approval/ApprovalValidator.php` | بررسی‌های پیش از گردش: عضو بودن کاربر اجراکننده، کپسیتی، عضو بودن صاحب درخواست، شماره موبایل، ووکامرس، قاعده یک کوپن |
 | `admin/Admin.php` | ثبت منوی پنل + ۶ زیرمنو + نمایش notice خطاهای پیش‌نیاز |
 | `admin/pages/RequestsPage.php` · `ReportsPage.php` · `SettingsPage.php` | صفحه‌های placeholder (فقط بررسی کپسیتی و رندر ویو — بدون UI نهایی) |
 | `admin/views/requests|reports|settings/index.php` | ویوهای placeholder |
@@ -173,7 +175,7 @@
 
 ### ۳.۲ فقط اسکلت (کلاس خالی، بدون منطق)
 
-`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Approval_ApprovalManager`، `RCS_Approval_ApprovalValidator`، `RCS_Reports_ReportManager`.
+`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Reports_ReportManager`.
 
 **قانون:** هر کلاس اسکلت، بدنه خالی دارد و فقط `instance()` دارد. منطق کسب‌وکار را داخل همین کلاس‌ها بنویسید، نه در فایل/کلاس جدید.
 
@@ -371,6 +373,86 @@ RCS_Coupons_CouponManager::instance()->can_use( $relation_id, $user_id );
 - فعال‌سازی دوباره کوپن غیرفعال‌شده (بند ۱۰ مورد ۷ تعیین‌نشده — عمداً پیاده نشده).
 - ثبت «کوپن استفاده شد» و «کوپن منقضی شد» در لاگ (به ووکامرس checkout وابسته است).
 - استفاده از کوپن توسط مشتری در سبد خرید (تست انتها‌به‌انتها با ووکامرس).
+
+---
+
+## ۳.۷ قابلیت پیاده‌سازی‌شده: گردش تأیید (اول کوپن، بعد پیامک)
+
+### ترتیب قطعی
+
+```text
+ApprovalManager::approve( $request_id, $user_id, $args )
+  1. ApprovalValidator  → همه بررسی‌ها (در صورت خطا: هیچ کوپن و هیچ پیامکی)
+  2. CouponManager::issue()  → ساخت کوپن در ووکامرس
+       ✗ شکست → هیچ پیامکی ارسال نمی‌شود و خطا برگردانده می‌شود
+  3. SmsManager::send_to_customer( approval_customer )  → رکورد مستقل برای مشتری
+  4. SmsManager::send_to_admin( approval_admin )        → یک رکورد مستقل برای هر شماره مدیر
+```
+
+**قانون اصلی:** تا وقتی کد تخفیف با موفقیت ساخته نشده باشد، هیچ پیامکی ارسال نمی‌شود.
+
+### حالت‌های خطا
+
+| حالت | کوپن | پیامک | نتیجه |
+|-------|------|-------|-------|
+| اعتبارسنجی رد شد | ساخته نمی‌شود | ارسال نمی‌شود | `WP_Error` |
+| ساخت کوپن شکست خورد | ساخته نمی‌شود | **ارسال نمی‌شود** | `WP_Error` + لاگ `Request Approved / failed` |
+| پیامک مشتری شکست خورد | **در سیستم می‌ماند و فعال است** | وضعیت `failed` | مدیر می‌تواند از پنل پیامک را دوباره بفرستد |
+| پیامک مدیر شکست خورد | در سیستم می‌ماند | فقط همان رکورد `failed` | پیامک موفق دیگر باطل نمی‌شود |
+
+تلاش مجدد پیامک (`RCS_SMS_SmsRetry`) روی **همان رکورد** انجام می‌شود: `retry_count` افزایش می‌یابد، `last_retry_at` ثبت می‌شود و **هیچ کوپن یا درخواست یا نسخه‌ی جدیدی ساخته نمی‌شود**.
+
+### بررسی‌های `ApprovalValidator`
+
+| بررسی | کد خطا |
+|-------|---------|
+| کاربر اجراکننده وارد شده است | `rcs_approval_login_required` |
+| کاربر اجراکننده کپسیتی `rcs_approve_requests` را دارد | `rcs_approval_forbidden` |
+| درخواست معتبر است | `rcs_approval_request_required` |
+| صاحب درخواست **عضو ثبت‌شده سایت** است | `rcs_approval_member_required` |
+| شماره موبایل صاحب درخواست داده شده است | `rcs_approval_mobile_required` |
+| ووکامرس فعال است | `rcs_approval_woocommerce_missing` |
+| درخواست هنوز کوپن نگرفته است | `rcs_approval_already_approved` |
+
+### مقادیر پیامک
+
+```php
+array(
+	'name'     => 'نام نمایشی مشتری',
+	'code'     => 'کد تخفیف ساخته‌شده',
+	'discount' => '20%',
+	'expiry'   => 'تاریخ انقضای کوپن',
+	'request'  => 'شناسه درخواست',
+)
+```
+
+نام پارامترهای هر نوع پیامک در صفحه‌ی SMS قابل تنظیم است (option `rcs_sms_parameters`) و نگاشت پیش‌فرض:
+
+| نوع | پارامترهای پیش‌فرض |
+|-----|---------------------|
+| `approval_customer` | name, code, discount, expiry |
+| `approval_admin` | name, code, discount, request |
+| `rejection_customer` | name, reason |
+| `expiry_reminder_customer` | name, code, expiry |
+
+### API
+
+```php
+RCS_Approval_ApprovalManager::instance()->approve( $request_id, $user_id, array(
+	'amount'          => 20,          // درصد تخفیف
+	'maximum_amount'  => 500,         // سقف تخفیف (اختیاری)
+	'customer_mobile' => '09120000000',
+) );
+// → array( coupon_id, coupon_code, customer_sms_id, customer_sms_status, admin_sms_ids, admin_sms_status )
+// یا WP_Error
+```
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- علامت‌گذاری وضعیت درخواست به `approved` و قفل کردن آن (به ماژول Requests وابسته است).
+- بررسی وضعیت خودِ درخواست (در انتظار بررسی بودن) — به ماژول Requests وابسته است.
+- رابط کاربری کارشناس برای تأیید/رد (به ماژول Requests وابسته است).
+- گردش رد درخواست و پیامک مربوط به آن.
 
 ---
 
@@ -692,7 +774,7 @@ ApprovalManager
 1. ~~**Forms**~~ — ✅ **انجام شد**: `FormManager` (CRUD) + `FormRepository` + `FieldManager` (۱۰ نوع فیلد) + `SubmissionHandler` + فرم‌ساز پنل + ویجت المنتور
 2. **Requests** — `RequestManager` + `RequestRepository` + `RequestAccess` (مالکیت/وضعیت) + `DraftManager` ← **قدم بعدی**
 3. **Revisions** — `RevisionManager` + `RevisionRepository` (شماره‌گذاری نسخه، حفظ تاریخچه)
-4. **Approval** — `ApprovalValidator` سپس `ApprovalManager` (جریان تأیید/رد idempotent)
+4. **Approval** — ✅ **انجام شد (بخش کوپن و پیامک)**: `ApprovalValidator` → `ApprovalManager` (کوپن اول، بعد پیامک) — علامت‌گذاری وضعیت درخواست با ماژول Requests کامل می‌شود
 5. **Coupons** — ✅ **انجام شد**: `WooCommerceCoupon` (آداپتور API) → `CouponManager` → `CouponValidator` → `CouponOwnership` + صفحه پنل با عملیات غیرفعال‌سازی
 6. **SMS** — ✅ **انجام شد**: `SmsTemplateManager` (انواع و نگاشت پارامتر) → `SmsSender` → `SmsIrClient` (API) → `SmsManager` → `SmsRetry` + صفحه تنظیمات و تاریخچه
 7. **Scheduler** — پیاده‌سازی `run_coupon_expiry_reminder` و `run_sms_retry` (idempotent)
@@ -762,6 +844,11 @@ wp eval 'uninstall_plugin("request-coupon-system/plugin.php");'
 | محدودیت کوپن | ایمیل در ووکامرس + لایه مالکیت با User ID | ووکامرس ۱۱.x محدودیت User ID ندارد؛ بند ۱۴ سند معماری |
 | کد کوپن | تصادفی ۱۲ کاراکتری، بررسی یکتایی در همه وضعیت‌ها | درخواست کاربر: کدها نباید یکسان باشند |
 | غیرفعال‌سازی کوپن | `set_status('trash')` با کپسیتی `rcs_manage_coupons` | روش رسمی ووکامرس؛ کوپن حذف نمی‌شود |
+| ترتیب کوپن و پیامک | **اول کوپن، بعد پیامک** | خواسته کاربر: تا ساخته‌نشدن کد تخفیف هیچ پیامکی ارسال نشود |
+| شکست پیامک | کوپن باقی می‌ماند، وضعیت پیامک `failed`، تلاش مجدد بدون کوپن جدید | خواسته کاربر |
+| کپسیتی تأیید | `rcs_approve_requests` لازم است | نقش `rcs_expert` آن را دارد؛ بند ۱۰ مورد ۵ هنوز تعیین‌نشده (مدیر فعلاً ندارد) |
+| شماره موبایل مشتری | آرگومان صریح `customer_mobile` | منبع ذخیره‌شده‌ی شماره در ماژول Requests هنوز وجود ندارد |
+| هدرهای SMS.ir | `X-API-KEY` + `Accept: application/json` | هم‌راستا با SDK رسمی `IPeCompany/smsir-php` |
 
 ---
 

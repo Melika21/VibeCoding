@@ -71,8 +71,8 @@ final class RCS_Integrations_SMSIr_SmsIrClient {
 				'timeout' => 15,
 				'headers' => array(
 					'Content-Type' => 'application/json',
-					'Accept'       => 'text/plain',
-					'x-api-key'    => $api_key,
+					'Accept'       => 'application/json',
+					'X-API-KEY'    => $api_key,
 				),
 				'body'    => wp_json_encode( $payload ),
 			)
@@ -131,7 +131,7 @@ final class RCS_Integrations_SMSIr_SmsIrClient {
 				'timeout' => 15,
 				'headers' => array(
 					'Accept'    => 'application/json',
-					'x-api-key' => $api_key,
+					'X-API-KEY' => $api_key,
 				),
 			)
 		);
