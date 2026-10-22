@@ -1,6 +1,6 @@
 === Request & Coupon System ===
 Contributors: melikasohrabi
-Tags: forms, woocommerce, coupon, sms, requests
+Tags: forms, woocommerce, coupon, sms, requests, persian, fa_IR
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 7.4
@@ -31,6 +31,15 @@ The plugin keeps WooCommerce as the source of truth for coupons and stores only 
 3. Open Request & Coupon > Settings to configure the SMS.ir credentials.
 
 On activation the plugin creates its database tables, the `rcs_expert` role and the scheduled tasks.
+
+== Translation ==
+
+The plugin is fully translated into Persian (Farsi). The translation files live in the `/languages` folder and load automatically when the site language is set to Persian (`fa_IR` or `fa`).
+
+* `request-coupon-system.pot` — translation template
+* `request-coupon-system-fa_IR.po` / `.mo` — Persian translation
+
+To rebuild the compiled file after editing the `.po` file, run `msgfmt request-coupon-system-fa_IR.po -o request-coupon-system-fa_IR.mo`.
 
 == Frequently Asked Questions ==
 

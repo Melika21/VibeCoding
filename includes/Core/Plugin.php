@@ -50,11 +50,34 @@ final class RCS_Core_Plugin {
 		$this->booted = true;
 
 		add_action( 'init', array( $this, 'load_textdomain' ), 0 );
+		add_filter( 'plugin_locale', array( $this, 'filter_plugin_locale' ), 10, 2 );
 		add_action( 'plugins_loaded', array( $this, 'init_modules' ), 20 );
 	}
 
 	public function load_textdomain() {
 		load_plugin_textdomain( 'request-coupon-system', false, dirname( plugin_basename( RCS_FILE ) ) . '/languages' );
+	}
+
+	/**
+	 * The plugin ships a Persian translation and renders in Persian by default,
+	 * regardless of the locale of the site it is installed on.
+	 *
+	 * @param string $locale  Locale determined by WordPress.
+	 * @param string $domain  Text domain of the translation file.
+	 * @return string
+	 */
+	public function filter_plugin_locale( $locale, $domain ) {
+		if ( 'request-coupon-system' !== $domain ) {
+			return $locale;
+		}
+
+		$forced = defined( 'RCS_LOCALE' ) ? RCS_LOCALE : 'fa_IR';
+
+		if ( '' === $forced || 'false' === $forced ) {
+			return $locale;
+		}
+
+		return $forced;
 	}
 
 	public function init_modules() {

@@ -75,7 +75,7 @@ $rcs_disabled_now   = isset( $disabled_now ) ? (int) $disabled_now : 0;
 					<td>
 						<?php echo esc_html( $rcs_amount . '%' ); ?>
 						<?php if ( $rcs_maximum > 0 ) : ?>
-							<br /><small><?php echo esc_html( sprintf( 'max %s', $rcs_maximum ) ); ?></small>
+								<br /><small><?php echo esc_html( sprintf( __( 'max %s', 'request-coupon-system' ), $rcs_maximum ) ); ?></small>
 						<?php endif; ?>
 					</td>
 					<td><?php echo esc_html( $rcs_expires ); ?></td>

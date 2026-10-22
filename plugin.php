@@ -29,6 +29,15 @@ define( 'RCS_REQUIRES_WC', '7.0' );
 define( 'RCS_DB_VERSION', '1.0.0' );
 define( 'RCS_TABLE_PREFIX', 'rcs_' );
 
+/**
+ * Locale of the plugin interface. The plugin ships a Persian translation and
+ * renders in Persian by default. Define this constant as an empty string or
+ * 'false' to follow the locale of the site instead.
+ */
+if ( ! defined( 'RCS_LOCALE' ) ) {
+	define( 'RCS_LOCALE', 'fa_IR' );
+}
+
 final class RCS_Autoloader {
 
 	private static $instance = null;
