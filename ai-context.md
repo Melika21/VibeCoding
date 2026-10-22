@@ -136,11 +136,20 @@
 | `includes/Logs/LogRepository.php` | درج در جدول `rcs_logs` |
 | `includes/Scheduler/Scheduler.php` | ثبت/لغو کرون‌های روزانه و ساعتی |
 | `includes/Approval/ExpertRole.php` | ساخت/به‌روزرسانی/حذف نقش `rcs_expert` و کپسیتی‌های آن |
-| `includes/Approval/ApprovalManager.php` | گردش تأیید: اول صدور کوپن، بعد ساخت و ارسال پیامک مشتری و مدیر |
-| `includes/Approval/ApprovalValidator.php` | بررسی‌های پیش از گردش: عضو بودن کاربر اجراکننده، کپسیتی، عضو بودن صاحب درخواست، شماره موبایل، ووکامرس، قاعده یک کوپن |
+| `includes/Approval/ApprovalManager.php` | گردش تأیید: اول صدور کوپن، بعد ساخت و ارسال پیامک مشتری و مدیر + علامت‌گذاری وضعیت درخواست |
+| `includes/Approval/ApprovalValidator.php` | بررسی‌های پیش از گردش و رد: عضو بودن کاربر اجراکننده، کپسیتی، عضو بودن صاحب درخواست، شماره موبایل، ووکامرس، قاعده یک کوپن، وضعیت درخواست |
+| `includes/Requests/RequestManager.php` | منطق درخواست: خواندن، فهرست، تغییر وضعیت (تأیید/رد)، تشخیص شماره موبایل مشتری |
+| `includes/Requests/RequestRepository.php` | دسترسی داده به `rcs_requests` (خواندن، فهرست، شمارش، تغییر وضعیت) |
+| `includes/Requests/RequestAccess.php` | مالکیت و وضعیت درخواست: مالک، pending، تأیید، رد |
+| `includes/Revisions/RevisionManager.php` | نسخه جاری و تاریخچه بازنگری درخواست، کدگذاری داده ارسالی |
+| `includes/Revisions/RevisionRepository.php` | دسترسی داده به `rcs_request_revisions` |
 | `admin/Admin.php` | ثبت منوی پنل + ۶ زیرمنو + نمایش notice خطاهای پیش‌نیاز |
-| `admin/pages/RequestsPage.php` · `ReportsPage.php` · `SettingsPage.php` | صفحه‌های placeholder (فقط بررسی کپسیتی و رندر ویو — بدون UI نهایی) |
-| `admin/views/requests|reports|settings/index.php` | ویوهای placeholder |
+| `admin/pages/RequestsPage.php` | فهرست و جزئیات درخواست، تایید و رد درخواست با nonce و کپسیتی |
+| `admin/views/requests/index.php` | جدول فهرست درخواست‌ها با فیلتر و صفحه‌بندی |
+| `admin/views/requests/detail.php` | صفحه جزئیات درخواست: داده ارسالی، تاریخچه نسخه، فرم تایید و رد |
+| `admin/assets/css/rcs-requests.css` | استایل صفحه درخواست‌ها |
+| `admin/pages/ReportsPage.php` · `SettingsPage.php` | صفحه‌های placeholder (فقط بررسی کپسیتی و رندر ویو — بدون UI نهایی) |
+| `admin/views/reports|settings/index.php` | ویوهای placeholder |
 | `admin/pages/FormsPage.php` | فرم‌ساز: فهرست فرم‌ها، صفحه ساخت/ویرایش، ذخیره و حذف با nonce و کپسیتی |
 | `admin/views/forms/index.php` | جدول فهرست فرم‌ها |
 | `admin/views/forms/builder.php` | صفحه ساخت فرم: نام، وضعیت، توضیح و ردیف‌های فیلد |
@@ -175,7 +184,7 @@
 
 ### ۳.۲ فقط اسکلت (کلاس خالی، بدون منطق)
 
-`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Requests_RequestManager`، `RCS_Requests_RequestRepository`، `RCS_Requests_RequestAccess`، `RCS_Revisions_RevisionManager`، `RCS_Revisions_RevisionRepository`، `RCS_Reports_ReportManager`.
+`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Reports_ReportManager`.
 
 **قانون:** هر کلاس اسکلت، بدنه خالی دارد و فقط `instance()` دارد. منطق کسب‌وکار را داخل همین کلاس‌ها بنویسید، نه در فایل/کلاس جدید.
 
@@ -637,6 +646,11 @@ uninstall.php  (WP_UNINSTALL_PLUGIN تعریف می‌شود) → plugin.php (ب
 | `rcs_general_settings` | تنظیمات عمومی |
 | `rcs_requirements_errors` (transient) | خطاهای پیش‌نیاز (۱ ساعت) |
 | `rcs_sms_parameters` | نگاشت نام پارامتر هر نوع پیامک به نام پارامتر در قالب سرویس‌دهنده |
+| `rcs_roles_version` | نسخه کپسیتی/نقش‌ها (`1.0.1`)، برای به‌روزرسانی نقش‌ها در نصب‌های موجود |
+
+### ۷.۲.۱ بارگذاری ترجمه
+
+افزونه ترجمه فارسی را ارسال می‌کند و رابط کاربری افزونه **همیشه به زبان فارسی** نمایش داده می‌شود، هرچند locale سایت متفاوت باشد. بارگذاری در `RCS_Core_Plugin::load_textdomain()` روی `init` صورت می‌گیرد و به دلیل حذف فیلتر `plugin_locale` در وردپرس ۶.۷+، برای دامنه `request-coupon-system` از فیلتر `gettext_request-coupon-system` استفاده شده تا فهرست ترجمه (`.mo`) هرچند locale سایت، اعمال شود. این تغییر فقط دامنه افزونه را تحت تأثیر قرار می‌دهد و سایر دامنه‌ها (ورودپرس، ووکامرس، المنتور) تحت تأثیر قرار نمی‌گیرند.
 
 ### ۷.۴ وضعیت‌ها
 
@@ -772,9 +786,9 @@ ApprovalManager
 هر مرحله را جداگانه پیاده و تست کنید. مرحله ۱ انجام شده است.
 
 1. ~~**Forms**~~ — ✅ **انجام شد**: `FormManager` (CRUD) + `FormRepository` + `FieldManager` (۱۰ نوع فیلد) + `SubmissionHandler` + فرم‌ساز پنل + ویجت المنتور
-2. **Requests** — `RequestManager` + `RequestRepository` + `RequestAccess` (مالکیت/وضعیت) + `DraftManager` ← **قدم بعدی**
-3. **Revisions** — `RevisionManager` + `RevisionRepository` (شماره‌گذاری نسخه، حفظ تاریخچه)
-4. **Approval** — ✅ **انجام شد (بخش کوپن و پیامک)**: `ApprovalValidator` → `ApprovalManager` (کوپن اول، بعد پیامک) — علامت‌گذاری وضعیت درخواست با ماژول Requests کامل می‌شود
+2. ~~**Requests**~~ — ✅ **انجام شد**: `RequestManager` + `RequestRepository` + `RequestAccess` + `RevisionManager` + `RevisionRepository` + صفحه-list/detail + تایید و رد درخواست با کپسیتی مدیر و کارشناس
+3. ~~**Revisions**~~ — ✅ **انجام شد**: versatile (شماره‌گذاری نسخه، حفظ تاریخچه، کدگذاری داده ارسالی)
+4. ~~**Approval**~~ — ✅ **انجام شد**: `ApprovalValidator` → `ApprovalManager` (کوپن اول، بعد پیامک) + علامت‌گذاری وضعیت درخواست با ماژول Requests + رد درخواست
 5. **Coupons** — ✅ **انجام شد**: `WooCommerceCoupon` (آداپتور API) → `CouponManager` → `CouponValidator` → `CouponOwnership` + صفحه پنل با عملیات غیرفعال‌سازی
 6. **SMS** — ✅ **انجام شد**: `SmsTemplateManager` (انواع و نگاشت پارامتر) → `SmsSender` → `SmsIrClient` (API) → `SmsManager` → `SmsRetry` + صفحه تنظیمات و تاریخچه
 7. **Scheduler** — پیاده‌سازی `run_coupon_expiry_reminder` و `run_sms_retry` (idempotent)

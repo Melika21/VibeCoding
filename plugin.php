@@ -27,6 +27,7 @@ define( 'RCS_REQUIRES_WP', '6.0' );
 define( 'RCS_REQUIRES_PHP', '7.4' );
 define( 'RCS_REQUIRES_WC', '7.0' );
 define( 'RCS_DB_VERSION', '1.0.0' );
+define( 'RCS_ROLES_VERSION', '1.0.1' );
 define( 'RCS_TABLE_PREFIX', 'rcs_' );
 
 /**

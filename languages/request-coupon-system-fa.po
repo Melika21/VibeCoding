@@ -273,10 +273,6 @@ msgstr "عملیات"
 msgid "ID"
 msgstr "شناسه"
 
-#: admin/views/requests/index.php
-msgid "Request review and revision history are part of the implementation phase. This screen is a placeholder."
-msgstr "بررسی درخواست و تاریخچه بازنگری در مرحله پیاده‌سازی قرار دارند. این صفحه موقتی است."
-
 #: includes/Requests/RequestStatus.php
 msgid "Draft"
 msgstr "پیش‌نویس"
@@ -585,3 +581,183 @@ msgstr "کوپن‌های صادرشده: %1$s — غیرفعال: %2$s"
 #: admin/views/sms/index.php
 msgid "Sent: %1$s — Failed: %2$s — Pending: %3$s"
 msgstr "ارسال‌شده: %1$s — ناموفق: %2$s — در انتظار: %3$s"
+
+#: admin/pages/RequestsPage.php:100 admin/pages/RequestsPage.php:161
+#: includes/Approval/ApprovalValidator.php:40
+#: includes/Approval/ApprovalValidator.php:94
+msgid "The request does not exist."
+msgstr "درخواست موردنظر وجود ندارد."
+
+#: admin/pages/RequestsPage.php:143 admin/pages/RequestsPage.php:198
+msgid "The request could not be verified."
+msgstr "درخواست تأیید نشد."
+
+#: admin/pages/RequestsPage.php:206 includes/Approval/ApprovalValidator.php:78
+msgid "You are not allowed to reject requests."
+msgstr "شما اجازه رد درخواست‌ها را ندارید."
+
+#: admin/views/requests/index.php:29
+msgid "Review the submitted requests, then approve them to issue a coupon or reject them with a reason."
+msgstr "درخواست‌های ارسالی را بررسی کنید و سپس آن‌ها را برای صدور کوپن تأیید یا با ذکر دلیل رد کنید."
+
+#. translators: 1: status label, 2: request count.
+#: admin/views/requests/index.php:38
+#, php-format
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+#: admin/views/requests/index.php:50 admin/views/requests/index.php:51
+msgid "Search"
+msgstr "جست‌وجو"
+
+#: admin/views/requests/index.php:55
+msgid "All statuses"
+msgstr "همه وضعیت‌ها"
+
+#: admin/views/requests/index.php:63
+msgid "All forms"
+msgstr "همه فرم‌ها"
+
+#: admin/views/requests/index.php:69
+msgid "Filter"
+msgstr "اعمال فیلتر"
+
+#: admin/views/requests/index.php:79 admin/views/requests/detail.php:169
+msgid "Coupon code"
+msgstr "کد کوپن"
+
+#: admin/views/requests/index.php:87
+msgid "No request has been submitted yet."
+msgstr "هنوز هیچ درخواستی ثبت نشده است."
+
+#: admin/views/requests/index.php:125
+msgid "View"
+msgstr "مشاهده"
+
+#. translators: %s: number of requests.
+#: admin/views/requests/index.php:139
+#, php-format
+msgid "%s requests"
+msgstr "%s درخواست"
+
+#: admin/views/requests/index.php:152
+msgid "Previous"
+msgstr "قبلی"
+
+#: admin/views/requests/index.php:153
+msgid "Next"
+msgstr "بعدی"
+
+#. translators: %s: request id.
+#: admin/views/requests/detail.php:39
+#, php-format
+msgid "Request #%s"
+msgstr "درخواست #%s"
+
+#: admin/views/requests/detail.php:46
+msgid "Back to requests"
+msgstr "بازگشت به درخواست‌ها"
+
+#: admin/views/requests/detail.php:54
+msgid "The request was approved and the coupon was issued."
+msgstr "درخواست تأیید شد و کوپن صادر گردید."
+
+#: admin/views/requests/detail.php:58
+msgid "The request was rejected."
+msgstr "درخواست رد شد."
+
+#: admin/views/requests/detail.php:63
+msgid "Submitted data"
+msgstr "اطلاعات ارسالی"
+
+#: admin/views/requests/detail.php:66 admin/views/requests/detail.php:90
+msgid "No data was submitted with this request."
+msgstr "داده‌ای برای این درخواست ثبت نشده است."
+
+#: admin/views/requests/detail.php:87
+msgid "Revision history"
+msgstr "تاریخچه بازنگری‌ها"
+
+#: admin/views/requests/detail.php:95
+msgid "Revision"
+msgstr "نسخه"
+
+#: admin/views/requests/detail.php:97
+msgid "Submitted by"
+msgstr "ارسال‌کننده"
+
+#: admin/views/requests/detail.php:98
+msgid "Submitted at"
+msgstr "زمان ارسال"
+
+#: admin/views/requests/detail.php:99
+msgid "Reason"
+msgstr "دلیل"
+
+#: admin/views/requests/detail.php:123
+msgid "Request details"
+msgstr "جزئیات درخواست"
+
+#: admin/views/requests/detail.php:153
+msgid "Updated"
+msgstr "آخرین تغییر"
+
+#: admin/views/requests/detail.php:158 includes/Requests/RequestManager.php:49
+msgid "Approved"
+msgstr "تأییدشده"
+
+#: admin/views/requests/detail.php:164 includes/Requests/RequestManager.php:48
+msgid "Rejected"
+msgstr "ردشده"
+
+#: admin/views/requests/detail.php:176
+msgid "Approve request"
+msgstr "تأیید درخواست"
+
+#: admin/views/requests/detail.php:184
+msgid "Discount percentage"
+msgstr "درصد تخفیف"
+
+#: admin/views/requests/detail.php:189
+msgid "Maximum discount amount"
+msgstr "مبلغ حداکثر تخفیف"
+
+#: admin/views/requests/detail.php:194
+msgid "Customer mobile number"
+msgstr "شماره موبایل مشتری"
+
+#: admin/views/requests/detail.php:198
+msgid "Approve and issue the coupon"
+msgstr "تأیید و صدور کوپن"
+
+#: admin/views/requests/detail.php:203
+msgid "Reject request"
+msgstr "رد درخواست"
+
+#: admin/views/requests/detail.php:211
+msgid "Reason for rejection"
+msgstr "دلیل رد درخواست"
+
+#: admin/views/requests/detail.php:215
+msgid "Reject the request"
+msgstr "رد درخواست"
+
+#: includes/Approval/ApprovalValidator.php:44
+msgid "Only a pending request can be approved."
+msgstr "فقط درخواست در انتظار بررسی قابل تأیید است."
+
+#: includes/Approval/ApprovalValidator.php:74
+msgid "You must be logged in to reject a request."
+msgstr "برای رد یک درخواست باید وارد حساب کاربری خود شوید."
+
+#: includes/Approval/ApprovalValidator.php:88
+msgid "A rejection reason is required."
+msgstr "ذکر دلیل رد درخواست الزامی است."
+
+#: includes/Approval/ApprovalValidator.php:98
+msgid "Only a pending request can be rejected."
+msgstr "فقط درخواست در انتظار بررسی قابل رد است."
+
+#: includes/Requests/RequestManager.php:47
+msgid "Pending"
+msgstr "در انتظار بررسی"

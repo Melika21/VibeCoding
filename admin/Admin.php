@@ -49,37 +49,37 @@ final class RCS_Admin_Admin {
 			array(
 				'forms',
 				__( 'Forms', 'request-coupon-system' ),
-				self::MENU_SLUG,
+				RCS_Admin_Pages_FormsPage::SLUG,
 				RCS_Core_Plugin::CAP_MANAGE_FORMS,
 			),
 			array(
 				'requests',
 				__( 'Requests', 'request-coupon-system' ),
-				'request-coupon-system-requests',
+				RCS_Admin_Pages_RequestsPage::SLUG,
 				RCS_Core_Plugin::CAP_MANAGE_REQUESTS,
 			),
 			array(
 				'coupons',
 				__( 'Coupons', 'request-coupon-system' ),
-				'request-coupon-system-coupons',
+				RCS_Admin_Pages_CouponsPage::SLUG,
 				RCS_Core_Plugin::CAP_MANAGE_COUPONS,
 			),
 			array(
 				'sms',
 				__( 'SMS', 'request-coupon-system' ),
-				'request-coupon-system-sms',
+				RCS_Admin_Pages_SmsPage::SLUG,
 				RCS_Core_Plugin::CAP_MANAGE_SMS,
 			),
 			array(
 				'reports',
 				__( 'Reports', 'request-coupon-system' ),
-				'request-coupon-system-reports',
+				RCS_Admin_Pages_ReportsPage::SLUG,
 				RCS_Core_Plugin::CAP_VIEW_REPORTS,
 			),
 			array(
 				'settings',
 				__( 'Settings', 'request-coupon-system' ),
-				'request-coupon-system-settings',
+				RCS_Admin_Pages_SettingsPage::SLUG,
 				RCS_Core_Plugin::CAP_MANAGE_SETTINGS,
 			),
 		);

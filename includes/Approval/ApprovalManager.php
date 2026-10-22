@@ -74,6 +74,8 @@ final class RCS_Approval_ApprovalManager {
 		$member = get_userdata( $user_id );
 		$values = $this->message_values( $record, $member, $request_id );
 
+		RCS_Requests_RequestManager::instance()->mark_approved( $request_id );
+
 		$context = array(
 			'request_id' => $request_id,
 			'user_id'    => $user_id,
@@ -108,6 +110,70 @@ final class RCS_Approval_ApprovalManager {
 			'customer_sms_status'  => $this->sms_status( $customer_sms_id ),
 			'admin_sms_ids'        => $admin_sms_ids,
 			'admin_sms_status'     => $this->admin_sms_status( $admin_sms_ids ),
+		);
+	}
+
+	public function reject( $request_id, $reason, array $args = array() ) {
+		$request_id = (int) $request_id;
+		$reason     = trim( (string) $reason );
+
+		$validation = $this->validator->validate_reject( $request_id, $reason );
+
+		if ( is_wp_error( $validation ) ) {
+			RCS_Logs_LogManager::instance()->log(
+				'Request Rejected',
+				array(
+					'request_id'    => $request_id,
+					'result'        => 'failed',
+					'error_message' => $validation->get_error_message(),
+				)
+			);
+
+			return $validation;
+		}
+
+		$request = RCS_Requests_RequestManager::instance()->get( $request_id );
+		$user_id = $request ? (int) $request['user_id'] : 0;
+		$member  = get_userdata( $user_id );
+
+		RCS_Requests_RequestManager::instance()->mark_rejected( $request_id, $reason );
+
+		$mobile = isset( $args['customer_mobile'] ) ? $args['customer_mobile'] : '';
+
+		if ( '' === trim( (string) $mobile ) ) {
+			$mobile = RCS_Requests_RequestManager::instance()->find_customer_mobile( $request_id );
+		}
+
+		$values = array(
+			'name'    => $member ? $member->display_name : '',
+			'reason'  => $reason,
+			'request' => (string) $request_id,
+		);
+
+		$context = array(
+			'request_id' => $request_id,
+			'user_id'    => $user_id,
+		);
+
+		$customer_sms_id = RCS_SMS_SmsManager::instance()->send_to_customer(
+			RCS_SMS_SmsTemplateManager::TYPE_REJECTION_CUSTOMER,
+			$mobile,
+			$values,
+			$context
+		);
+
+		RCS_Logs_LogManager::instance()->log(
+			'Request Rejected',
+			array(
+				'request_id' => $request_id,
+				'result'     => 'success',
+			)
+		);
+
+		return array(
+			'request_id'          => $request_id,
+			'customer_sms_id'     => (int) $customer_sms_id,
+			'customer_sms_status' => $this->sms_status( $customer_sms_id ),
 		);
 	}
 

@@ -20,6 +20,8 @@ final class RCS_Core_Plugin {
 
 	private $modules = array();
 
+	private $catalogue = null;
+
 	private function __construct() {}
 
 	public static function instance() {
@@ -39,6 +41,9 @@ final class RCS_Core_Plugin {
 			self::CAP_VIEW_REPORTS,
 			self::CAP_MANAGE_SETTINGS,
 			self::CAP_VIEW_LOGS,
+			RCS_Approval_ExpertRole::CAP_REVIEW,
+			RCS_Approval_ExpertRole::CAP_APPROVE,
+			RCS_Approval_ExpertRole::CAP_REJECT,
 		);
 	}
 
@@ -50,34 +55,69 @@ final class RCS_Core_Plugin {
 		$this->booted = true;
 
 		add_action( 'init', array( $this, 'load_textdomain' ), 0 );
-		add_filter( 'plugin_locale', array( $this, 'filter_plugin_locale' ), 10, 2 );
 		add_action( 'plugins_loaded', array( $this, 'init_modules' ), 20 );
 	}
 
 	public function load_textdomain() {
-		load_plugin_textdomain( 'request-coupon-system', false, dirname( plugin_basename( RCS_FILE ) ) . '/languages' );
+		$domain = 'request-coupon-system';
+		$locale = $this->locale();
+		$file   = RCS_PATH . 'languages/' . $domain . '-' . $locale . '.mo';
+
+		load_plugin_textdomain( $domain, false, dirname( plugin_basename( RCS_FILE ) ) . '/languages' );
+
+		if ( ! file_exists( $file ) ) {
+			return;
+		}
+
+		$mo = new MO();
+
+		if ( ! $mo->import_from_file( $file ) ) {
+			return;
+		}
+
+		$this->catalogue = $mo;
+
+		add_filter( 'gettext_' . $domain, array( $this, 'filter_domain_translation' ), 10, 2 );
 	}
 
 	/**
-	 * The plugin ships a Persian translation and renders in Persian by default,
-	 * regardless of the locale of the site it is installed on.
+	 * Serves the plugin catalogue for its own text domain.
 	 *
-	 * @param string $locale  Locale determined by WordPress.
-	 * @param string $domain  Text domain of the translation file.
+	 * WordPress 6.7 loads text domains lazily against the site locale, so a
+	 * plugin that ships its own locale cannot rely on the core loader. The
+	 * catalogue is therefore applied to this domain only.
+	 *
+	 * @param string $translation Translation resolved by WordPress.
+	 * @param string $text        Original text.
 	 * @return string
 	 */
-	public function filter_plugin_locale( $locale, $domain ) {
-		if ( 'request-coupon-system' !== $domain ) {
-			return $locale;
+	public function filter_domain_translation( $translation, $text ) {
+		if ( ! $this->catalogue ) {
+			return $translation;
 		}
 
-		$forced = defined( 'RCS_LOCALE' ) ? RCS_LOCALE : 'fa_IR';
+		$translated = $this->catalogue->translate( $text );
 
-		if ( '' === $forced || 'false' === $forced ) {
-			return $locale;
+		if ( false === $translated || '' === $translated ) {
+			return $translation;
 		}
 
-		return $forced;
+		return $translated;
+	}
+
+	/**
+	 * Locale of the plugin interface.
+	 *
+	 * @return string
+	 */
+	public function locale() {
+		$locale = defined( 'RCS_LOCALE' ) ? RCS_LOCALE : '';
+
+		if ( '' === $locale || 'false' === $locale ) {
+			$locale = determine_locale();
+		}
+
+		return (string) $locale;
 	}
 
 	public function init_modules() {

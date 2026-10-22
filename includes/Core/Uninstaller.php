@@ -64,6 +64,7 @@ final class RCS_Core_Uninstaller {
 	private static function delete_options() {
 		$options = array(
 			'rcs_db_version',
+			'rcs_roles_version',
 			'rcs_version',
 			'rcs_sms_settings',
 			'rcs_general_settings',

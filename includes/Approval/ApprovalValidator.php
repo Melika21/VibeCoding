@@ -34,6 +34,16 @@ final class RCS_Approval_ApprovalValidator {
 			return new WP_Error( 'rcs_approval_request_required', __( 'A valid request is required.', 'request-coupon-system' ) );
 		}
 
+		$request = RCS_Requests_RequestManager::instance()->get( $request_id );
+
+		if ( ! $request ) {
+			return new WP_Error( 'rcs_approval_request_missing', __( 'The request does not exist.', 'request-coupon-system' ) );
+		}
+
+		if ( ! RCS_Requests_RequestAccess::instance()->can_approve( $request ) ) {
+			return new WP_Error( 'rcs_approval_request_not_pending', __( 'Only a pending request can be approved.', 'request-coupon-system' ) );
+		}
+
 		$member = get_userdata( $user_id );
 
 		if ( ! $member ) {
@@ -54,6 +64,38 @@ final class RCS_Approval_ApprovalValidator {
 
 		if ( $existing ) {
 			return new WP_Error( 'rcs_approval_already_approved', __( 'This request already received a coupon.', 'request-coupon-system' ) );
+		}
+
+		return true;
+	}
+
+	public function validate_reject( $request_id, $reason ) {
+		if ( ! is_user_logged_in() ) {
+			return new WP_Error( 'rcs_reject_login_required', __( 'You must be logged in to reject a request.', 'request-coupon-system' ) );
+		}
+
+		if ( ! current_user_can( RCS_Approval_ExpertRole::CAP_REJECT ) ) {
+			return new WP_Error( 'rcs_reject_forbidden', __( 'You are not allowed to reject requests.', 'request-coupon-system' ) );
+		}
+
+		$request_id = (int) $request_id;
+
+		if ( $request_id <= 0 ) {
+			return new WP_Error( 'rcs_reject_request_required', __( 'A valid request is required.', 'request-coupon-system' ) );
+		}
+
+		if ( '' === trim( (string) $reason ) ) {
+			return new WP_Error( 'rcs_reject_reason_required', __( 'A rejection reason is required.', 'request-coupon-system' ) );
+		}
+
+		$request = RCS_Requests_RequestManager::instance()->get( $request_id );
+
+		if ( ! $request ) {
+			return new WP_Error( 'rcs_reject_request_missing', __( 'The request does not exist.', 'request-coupon-system' ) );
+		}
+
+		if ( ! RCS_Requests_RequestAccess::instance()->can_reject( $request ) ) {
+			return new WP_Error( 'rcs_reject_request_not_pending', __( 'Only a pending request can be rejected.', 'request-coupon-system' ) );
 		}
 
 		return true;
