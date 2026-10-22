@@ -54,6 +54,10 @@ final class RCS_Core_Activator {
 		if ( ! $role->has_cap( RCS_Core_Plugin::CAP_MANAGE_REQUESTS ) ) {
 			$role->add_cap( RCS_Core_Plugin::CAP_MANAGE_REQUESTS );
 		}
+
+		if ( ! $role->has_cap( RCS_Core_Plugin::CAP_VIEW_REPORTS ) ) {
+			$role->add_cap( RCS_Core_Plugin::CAP_VIEW_REPORTS );
+		}
 	}
 
 	private static function create_default_settings() {
