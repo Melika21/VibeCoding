@@ -1,0 +1,828 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the Request & Coupon System package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Request & Coupon System 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-22 11:28+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: admin/Admin.php:39
+msgid "Request & Coupon System"
+msgstr ""
+
+#: admin/Admin.php:40
+#: includes/Integrations/Elementor/ElementorIntegration.php:51
+msgid "Request & Coupon"
+msgstr ""
+
+#: admin/Admin.php:51 admin/views/forms/index.php:13
+msgid "Forms"
+msgstr ""
+
+#: admin/Admin.php:57 admin/views/requests/index.php:23
+msgid "Requests"
+msgstr ""
+
+#: admin/Admin.php:63 admin/views/coupons/index.php:14
+msgid "Coupons"
+msgstr ""
+
+#: admin/Admin.php:69 admin/views/sms/index.php:20
+msgid "SMS"
+msgstr ""
+
+#: admin/Admin.php:75 admin/views/reports/index.php:8
+msgid "Reports"
+msgstr ""
+
+#: admin/Admin.php:81 admin/views/settings/index.php:8
+msgid "Settings"
+msgstr ""
+
+#: admin/Admin.php:106
+msgid "Request & Coupon System did not pass the environment checks:"
+msgstr ""
+
+#: admin/pages/CouponsPage.php:29 admin/pages/FormsPage.php:43
+#: admin/pages/ReportsPage.php:30 admin/pages/RequestsPage.php:42
+#: admin/pages/SettingsPage.php:30 admin/pages/SmsPage.php:30
+msgid "You do not have permission to access this page."
+msgstr ""
+
+#: admin/pages/CouponsPage.php:68
+msgid "The coupon request could not be verified."
+msgstr ""
+
+#: admin/pages/FormsPage.php:77 admin/pages/FormsPage.php:130
+#: includes/Forms/SubmissionHandler.php:40
+msgid "The form request could not be verified."
+msgstr ""
+
+#: admin/pages/RequestsPage.php:100 admin/pages/RequestsPage.php:161
+#: includes/Approval/ApprovalValidator.php:40
+#: includes/Approval/ApprovalValidator.php:94
+msgid "The request does not exist."
+msgstr ""
+
+#: admin/pages/RequestsPage.php:143 admin/pages/RequestsPage.php:198
+msgid "The request could not be verified."
+msgstr ""
+
+#: admin/pages/RequestsPage.php:151 includes/Approval/ApprovalValidator.php:27
+msgid "You are not allowed to approve requests."
+msgstr ""
+
+#: admin/pages/RequestsPage.php:206 includes/Approval/ApprovalValidator.php:78
+msgid "You are not allowed to reject requests."
+msgstr ""
+
+#: admin/pages/SmsPage.php:82 admin/pages/SmsPage.php:162
+msgid "The SMS request could not be verified."
+msgstr ""
+
+#: admin/views/coupons/index.php:17
+msgid "The coupon was disabled."
+msgstr ""
+
+#: admin/views/coupons/index.php:21
+msgid ""
+"WooCommerce is not active. Coupons are stored in WooCommerce and cannot be "
+"issued or disabled without it."
+msgstr ""
+
+#. translators: 1: total coupon count, 2: disabled coupon count.
+#: admin/views/coupons/index.php:28
+#, php-format
+msgid "Issued coupons: %1$s — Disabled: %2$s"
+msgstr ""
+
+#: admin/views/coupons/index.php:38
+msgid "Code"
+msgstr ""
+
+#: admin/views/coupons/index.php:39
+msgid "Request"
+msgstr ""
+
+#: admin/views/coupons/index.php:40 admin/views/requests/index.php:77
+#: admin/views/requests/detail.php:136
+msgid "User"
+msgstr ""
+
+#: admin/views/coupons/index.php:41
+msgid "Discount"
+msgstr ""
+
+#: admin/views/coupons/index.php:42
+msgid "Expires"
+msgstr ""
+
+#: admin/views/coupons/index.php:43 admin/views/forms/builder.php:42
+#: admin/views/forms/index.php:27 admin/views/requests/index.php:53
+#: admin/views/requests/index.php:78 admin/views/requests/detail.php:96
+#: admin/views/requests/detail.php:145 admin/views/sms/index.php:112
+msgid "Status"
+msgstr ""
+
+#: admin/views/coupons/index.php:44 admin/views/forms/index.php:30
+#: admin/views/requests/index.php:81 admin/views/sms/index.php:115
+msgid "Actions"
+msgstr ""
+
+#: admin/views/coupons/index.php:50
+msgid "No coupon has been issued yet."
+msgstr ""
+
+#: admin/views/coupons/index.php:78
+#, php-format
+msgid "max %s"
+msgstr ""
+
+#: admin/views/coupons/index.php:85
+msgid "Disable this coupon?"
+msgstr ""
+
+#: admin/views/coupons/index.php:86
+msgid "Disable"
+msgstr ""
+
+#: admin/views/forms/builder.php:20 admin/views/forms/index.php:15
+msgid "Add new form"
+msgstr ""
+
+#: admin/views/forms/builder.php:20
+msgid "Edit form"
+msgstr ""
+
+#: admin/views/forms/builder.php:23
+msgid "Back to forms"
+msgstr ""
+
+#: admin/views/forms/builder.php:28
+msgid "The form was saved."
+msgstr ""
+
+#: admin/views/forms/builder.php:38
+msgid "Form name"
+msgstr ""
+
+#: admin/views/forms/builder.php:52
+msgid "Description"
+msgstr ""
+
+#: admin/views/forms/builder.php:58 admin/views/forms/index.php:28
+msgid "Fields"
+msgstr ""
+
+#: admin/views/forms/builder.php:59
+msgid ""
+"The field key is the name used in the submitted data and must be unique "
+"inside the form."
+msgstr ""
+
+#: admin/views/forms/builder.php:64 admin/views/sms/index.php:110
+msgid "Type"
+msgstr ""
+
+#: admin/views/forms/builder.php:65
+msgid "Key"
+msgstr ""
+
+#: admin/views/forms/builder.php:66
+msgid "Label"
+msgstr ""
+
+#: admin/views/forms/builder.php:67
+msgid "Required"
+msgstr ""
+
+#: admin/views/forms/builder.php:68
+msgid "Options (one per line)"
+msgstr ""
+
+#: admin/views/forms/builder.php:69
+msgid "Step"
+msgstr ""
+
+#: admin/views/forms/builder.php:96 admin/views/forms/builder.php:126
+msgid "Remove"
+msgstr ""
+
+#: admin/views/forms/builder.php:104
+msgid "Add field"
+msgstr ""
+
+#: admin/views/forms/builder.php:105
+msgid "Save form"
+msgstr ""
+
+#: admin/views/forms/index.php:20
+msgid "The form was deleted."
+msgstr ""
+
+#: admin/views/forms/index.php:26
+msgid "Name"
+msgstr ""
+
+#: admin/views/forms/index.php:29 admin/views/requests/index.php:80
+#: admin/views/requests/detail.php:149 admin/views/sms/index.php:114
+msgid "Created"
+msgstr ""
+
+#: admin/views/forms/index.php:36
+msgid "No form has been created yet."
+msgstr ""
+
+#: admin/views/forms/index.php:66
+msgid "Edit"
+msgstr ""
+
+#: admin/views/forms/index.php:67
+msgid "Delete this form and its fields?"
+msgstr ""
+
+#: admin/views/forms/index.php:68
+msgid "Delete"
+msgstr ""
+
+#: admin/views/reports/index.php:9
+msgid ""
+"Reporting and export are part of the implementation phase. This screen is a "
+"placeholder."
+msgstr ""
+
+#: admin/views/requests/index.php:29
+msgid ""
+"Review the submitted requests, then approve them to issue a coupon or reject "
+"them with a reason."
+msgstr ""
+
+#. translators: 1: status label, 2: request count.
+#: admin/views/requests/index.php:38
+#, php-format
+msgid "%1$s: %2$s"
+msgstr ""
+
+#: admin/views/requests/index.php:50 admin/views/requests/index.php:51
+msgid "Search"
+msgstr ""
+
+#: admin/views/requests/index.php:55
+msgid "All statuses"
+msgstr ""
+
+#: admin/views/requests/index.php:61 admin/views/requests/index.php:76
+#: admin/views/requests/detail.php:132 elementor/widgets/FormWidget.php:47
+#: elementor/widgets/FormWidget.php:56
+msgid "Form"
+msgstr ""
+
+#: admin/views/requests/index.php:63
+msgid "All forms"
+msgstr ""
+
+#: admin/views/requests/index.php:69
+msgid "Filter"
+msgstr ""
+
+#: admin/views/requests/index.php:75 admin/views/requests/detail.php:128
+#: admin/views/sms/index.php:109
+msgid "ID"
+msgstr ""
+
+#: admin/views/requests/index.php:79 admin/views/requests/detail.php:169
+msgid "Coupon code"
+msgstr ""
+
+#: admin/views/requests/index.php:87
+msgid "No request has been submitted yet."
+msgstr ""
+
+#: admin/views/requests/index.php:125
+msgid "View"
+msgstr ""
+
+#. translators: %s: number of requests.
+#: admin/views/requests/index.php:139
+#, php-format
+msgid "%s requests"
+msgstr ""
+
+#: admin/views/requests/index.php:152
+msgid "Previous"
+msgstr ""
+
+#: admin/views/requests/index.php:153
+msgid "Next"
+msgstr ""
+
+#. translators: %s: request id.
+#: admin/views/requests/detail.php:39
+#, php-format
+msgid "Request #%s"
+msgstr ""
+
+#: admin/views/requests/detail.php:46
+msgid "Back to requests"
+msgstr ""
+
+#: admin/views/requests/detail.php:54
+msgid "The request was approved and the coupon was issued."
+msgstr ""
+
+#: admin/views/requests/detail.php:58
+msgid "The request was rejected."
+msgstr ""
+
+#: admin/views/requests/detail.php:63
+msgid "Submitted data"
+msgstr ""
+
+#: admin/views/requests/detail.php:66 admin/views/requests/detail.php:90
+msgid "No data was submitted with this request."
+msgstr ""
+
+#: admin/views/requests/detail.php:87
+msgid "Revision history"
+msgstr ""
+
+#: admin/views/requests/detail.php:95
+msgid "Revision"
+msgstr ""
+
+#: admin/views/requests/detail.php:97
+msgid "Submitted by"
+msgstr ""
+
+#: admin/views/requests/detail.php:98
+msgid "Submitted at"
+msgstr ""
+
+#: admin/views/requests/detail.php:99
+msgid "Reason"
+msgstr ""
+
+#: admin/views/requests/detail.php:123
+msgid "Request details"
+msgstr ""
+
+#: admin/views/requests/detail.php:153
+msgid "Updated"
+msgstr ""
+
+#: admin/views/requests/detail.php:158 includes/Requests/RequestManager.php:49
+msgid "Approved"
+msgstr ""
+
+#: admin/views/requests/detail.php:164 includes/Requests/RequestManager.php:48
+msgid "Rejected"
+msgstr ""
+
+#: admin/views/requests/detail.php:176
+msgid "Approve request"
+msgstr ""
+
+#: admin/views/requests/detail.php:184
+msgid "Discount percentage"
+msgstr ""
+
+#: admin/views/requests/detail.php:189
+msgid "Maximum discount amount"
+msgstr ""
+
+#: admin/views/requests/detail.php:194
+msgid "Customer mobile number"
+msgstr ""
+
+#: admin/views/requests/detail.php:198
+msgid "Approve and issue the coupon"
+msgstr ""
+
+#: admin/views/requests/detail.php:203
+msgid "Reject request"
+msgstr ""
+
+#: admin/views/requests/detail.php:211
+msgid "Reason for rejection"
+msgstr ""
+
+#: admin/views/requests/detail.php:215
+msgid "Reject the request"
+msgstr ""
+
+#: admin/views/settings/index.php:9
+msgid ""
+"The settings screens are part of the implementation phase. This screen is a "
+"placeholder."
+msgstr ""
+
+#: admin/views/sms/index.php:23
+msgid "The SMS settings were saved."
+msgstr ""
+
+#: admin/views/sms/index.php:27
+msgid "The message was queued for a new attempt."
+msgstr ""
+
+#: admin/views/sms/index.php:30
+msgid "SMS.ir connection"
+msgstr ""
+
+#: admin/views/sms/index.php:38
+msgid "API key"
+msgstr ""
+
+#: admin/views/sms/index.php:41
+msgid ""
+"The API key of the SMS.ir developer panel. A Sandbox key can be used for "
+"testing."
+msgstr ""
+
+#: admin/views/sms/index.php:45
+msgid "Sender line"
+msgstr ""
+
+#: admin/views/sms/index.php:48
+msgid ""
+"Optional. The pattern messages are sent from the service line registered in "
+"the SMS.ir panel, so this field can stay empty."
+msgstr ""
+
+#: admin/views/sms/index.php:52
+msgid "Administrator numbers"
+msgstr ""
+
+#: admin/views/sms/index.php:55
+msgid "One number per line. Every number receives its own message record."
+msgstr ""
+
+#: admin/views/sms/index.php:61
+msgid "Message patterns"
+msgstr ""
+
+#: admin/views/sms/index.php:62
+msgid ""
+"The patterns are defined in the SMS.ir panel. The message text is never "
+"stored in the plugin, only the pattern identifier and the parameter names."
+msgstr ""
+
+#: admin/views/sms/index.php:67
+msgid "Message type"
+msgstr ""
+
+#: admin/views/sms/index.php:68
+msgid "Pattern ID"
+msgstr ""
+
+#: admin/views/sms/index.php:69
+msgid "Parameter names"
+msgstr ""
+
+#: admin/views/sms/index.php:89
+msgid "Save SMS settings"
+msgstr ""
+
+#: admin/views/sms/index.php:92
+msgid "Message history"
+msgstr ""
+
+#. translators: 1: sent count, 2: failed count, 3: pending count.
+#: admin/views/sms/index.php:98
+#, php-format
+msgid "Sent: %1$s — Failed: %2$s — Pending: %3$s"
+msgstr ""
+
+#: admin/views/sms/index.php:111
+msgid "Recipient"
+msgstr ""
+
+#: admin/views/sms/index.php:113
+msgid "Retries"
+msgstr ""
+
+#: admin/views/sms/index.php:121
+msgid "No message has been sent yet."
+msgstr ""
+
+#: admin/views/sms/index.php:146
+msgid "Retry"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:16
+msgid "RCS Form"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:66
+msgid "Show form title"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:76
+msgid "Show form description"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:86
+msgid "Submit button text"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:87 elementor/widgets/FormWidget.php:88
+#: elementor/widgets/FormWidget.php:128 frontend/Frontend.php:54
+msgid "Submit"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:96
+msgid "Fields per row"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:98
+msgid "One column"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:99
+msgid "Two columns"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:100
+msgid "Three columns"
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:114
+msgid "Select a form in the widget settings."
+msgstr ""
+
+#: elementor/widgets/FormWidget.php:137
+msgid "— Select a form —"
+msgstr ""
+
+#: frontend/views/form.php:26
+msgid "Please log in to send this form."
+msgstr ""
+
+#: frontend/views/form.php:28
+msgid "Only registered members can send this form. Please log in to continue."
+msgstr ""
+
+#: frontend/views/form.php:33
+msgid "Log in"
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:23
+msgid "You must be logged in to approve a request."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:34
+#: includes/Approval/ApprovalValidator.php:84
+msgid "A valid request is required."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:44
+msgid "Only a pending request can be approved."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:50
+msgid "The request owner must be a registered member of the site."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:56
+msgid "The mobile number of the request owner is required."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:60
+#: includes/Coupons/CouponManager.php:37
+msgid "WooCommerce is not active, so the coupon could not be issued."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:66
+#: includes/Coupons/CouponManager.php:68
+msgid "This request already received a coupon."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:74
+msgid "You must be logged in to reject a request."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:88
+msgid "A rejection reason is required."
+msgstr ""
+
+#: includes/Approval/ApprovalValidator.php:98
+msgid "Only a pending request can be rejected."
+msgstr ""
+
+#: includes/Approval/ExpertRole.php:33
+msgid "RCS Expert"
+msgstr ""
+
+#. translators: 1: required PHP version, 2: current PHP version.
+#: includes/Core/Requirements.php:41
+#, php-format
+msgid ""
+"Request & Coupon System requires PHP %1$s or newer. This server runs PHP "
+"%2$s."
+msgstr ""
+
+#. translators: 1: required WordPress version, 2: current WordPress version.
+#: includes/Core/Requirements.php:50
+#, php-format
+msgid ""
+"Request & Coupon System requires WordPress %1$s or newer. This site runs "
+"WordPress %2$s."
+msgstr ""
+
+#: includes/Core/Requirements.php:63
+msgid ""
+"WooCommerce is not active. Coupon issuing and coupon management stay "
+"unavailable until it is activated."
+msgstr ""
+
+#. translators: 1: required WooCommerce version, 2: current WooCommerce version.
+#: includes/Core/Requirements.php:67
+#, php-format
+msgid ""
+"Request & Coupon System requires WooCommerce %1$s or newer. This site runs "
+"WooCommerce %2$s."
+msgstr ""
+
+#: includes/Core/Requirements.php:74
+msgid ""
+"Elementor is not active. The form widget is registered only while Elementor "
+"is running."
+msgstr ""
+
+#: includes/Coupons/CouponManager.php:105
+msgid "The coupon relation could not be stored."
+msgstr ""
+
+#: includes/Coupons/CouponValidator.php:28
+msgid "A coupon must belong to a request."
+msgstr ""
+
+#: includes/Coupons/CouponValidator.php:34
+msgid "A coupon must belong to a valid user."
+msgstr ""
+
+#: includes/Coupons/CouponValidator.php:38
+msgid "The discount percentage is required."
+msgstr ""
+
+#. translators: 1: minimum percentage, 2: maximum percentage.
+#: includes/Coupons/CouponValidator.php:48
+#, php-format
+msgid "The discount percentage must be between %1$s and %2$s."
+msgstr ""
+
+#: includes/Coupons/CouponValidator.php:59
+msgid "The maximum discount amount must be greater than zero."
+msgstr ""
+
+#: includes/Coupons/CouponValidator.php:78
+msgid "The coupon code is required."
+msgstr ""
+
+#: includes/Coupons/CouponValidator.php:82
+msgid "The coupon code is too long."
+msgstr ""
+
+#: includes/Coupons/CouponValidator.php:86
+msgid "This coupon code already exists."
+msgstr ""
+
+#: includes/Coupons/WooCommerceCoupon.php:29
+msgid "WooCommerce is not active."
+msgstr ""
+
+#: includes/Coupons/WooCommerceCoupon.php:38
+msgid "A unique coupon code could not be generated."
+msgstr ""
+
+#: includes/Coupons/WooCommerceCoupon.php:68
+msgid "The coupon could not be stored."
+msgstr ""
+
+#: includes/Forms/FieldManager.php:23
+msgid "Text"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:24
+msgid "Textarea"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:25
+msgid "Number"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:26
+msgid "Email"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:27
+msgid "Mobile"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:28
+msgid "Select"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:29
+msgid "Radio"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:30
+msgid "Checkbox"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:31
+msgid "Date"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:32
+msgid "File Upload"
+msgstr ""
+
+#: includes/Forms/FieldManager.php:253
+msgid "Select an option"
+msgstr ""
+
+#: includes/Forms/FormManager.php:33 includes/Requests/RequestManager.php:46
+msgid "Draft"
+msgstr ""
+
+#: includes/Forms/FormManager.php:34
+msgid "Published"
+msgstr ""
+
+#: includes/Forms/SubmissionHandler.php:50
+msgid "The requested form does not exist."
+msgstr ""
+
+#. translators: %s: field label.
+#: includes/Forms/SubmissionHandler.php:108
+#, php-format
+msgid "%s is required."
+msgstr ""
+
+#. translators: %s: field label.
+#: includes/Forms/SubmissionHandler.php:122
+#, php-format
+msgid "%s must be a valid email address."
+msgstr ""
+
+#. translators: %s: field label.
+#: includes/Forms/SubmissionHandler.php:130
+#, php-format
+msgid "%s must be a valid mobile number."
+msgstr ""
+
+#: includes/Forms/SubmissionHandler.php:158
+msgid ""
+"Your submission was received. Request creation is enabled in the next "
+"implementation phase."
+msgstr ""
+
+#: includes/Integrations/SMSIr/SmsIrClient.php:54
+#: includes/Integrations/SMSIr/SmsIrClient.php:125
+msgid "The SMS.ir API key is not configured."
+msgstr ""
+
+#: includes/Integrations/SMSIr/SmsIrClient.php:58
+msgid "No SMS.ir pattern is configured for this message type."
+msgstr ""
+
+#: includes/Integrations/SMSIr/SmsIrClient.php:98
+#: includes/Integrations/SMSIr/SmsIrClient.php:149
+msgid "SMS.ir rejected the request."
+msgstr ""
+
+#: includes/Requests/RequestManager.php:47
+msgid "Pending"
+msgstr ""
+
+#: includes/SMS/SmsSender.php:36
+msgid "The SMS record is not valid."
+msgstr ""
+
+#: includes/SMS/SmsTemplateManager.php:30
+msgid "Approval to customer"
+msgstr ""
+
+#: includes/SMS/SmsTemplateManager.php:31
+msgid "Approval to administrator"
+msgstr ""
+
+#: includes/SMS/SmsTemplateManager.php:32
+msgid "Rejection to customer"
+msgstr ""
+
+#: includes/SMS/SmsTemplateManager.php:33
+msgid "Expiry reminder to customer"
+msgstr ""

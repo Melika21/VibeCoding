@@ -1,223 +1,869 @@
 # AI Context — Request & Coupon System (RCS) WordPress Plugin
 
-> این فایل برای هر ایجنت AI که در آینده بر این افزونه کار کند نوشته شده است. خواندن اجباری است قبل از شروع هر تغییر یا توسعه جدید.
+> این فایل مرجع قطعی پروژه است. **قبل از هر تغییری آن را کامل بخوانید.**
+> هر ایجنتی که روی این افزونه کار می‌کند باید پس از خواندن این فایل بداند: چه چیزی ساخته شده، چه چیزی هنوز ساخته نشده، گردش داده چگونه است، و قدم بعدی دقیقاً چیست.
+> نسخه فعلی: **۱.۰.۰** — زیرساخت کامل + چهار قابلیت پیاده‌سازی‌شده: فرم‌ساز و ویجت المنتور، پیامک SMS.ir، الزام عضو بودن، ماژول کوپن.
 
 ---
 
-## 1. هدف نهایی
+## ۰. قواعد گردش کار برای ایجنت (الزامی)
 
-توسعه یک افزونه وردپرس / ووکامرس به نام **Request & Coupon System** که شامل:
-- ساخت فرم چندمرحله‌ای و مدیریت فیلدها
-- ثبت درخواست و مدیریت اصلاحات (revisions)
-- تاییدیه specialist (متخصص) و کد تخفیف WooCommerce
-- اعلان‌های SMS (سرویس SMS.ir)
-- لاگraš و گزارش‌گیری
+### ۰.۱ ترتیب کار برای هر قابلیت جدید
 
-در این مرحله فقط **skeleton و زیرساخت نصب/فعال‌سازی** کامل است. هیچ لاجیکک تجاری (business logic) اضافه نشده است.
+```text
+1. خواندن کامل این فایل
+2. پیاده‌سازی فقط فایل‌های ضروری همان قابلیت (بدون تغییر بخش‌های دیگر)
+3. تست واقعی قابلیت (روی وردپرس/ووکامرس/المنتور واقعی، نه فقط lint)
+4. اگر تست سالم بود ← به‌روزرسانی همین فایل ai-context.md
+5. یک کامیت شامل کد + فایل به‌روزشده ai-context.md
+6. push به شاخه
+```
+
+### ۰.۲ قانون به‌روزرسانی `ai-context.md`
+
+> **پس از هر قابلیت سالم، این فایل باید به‌روز شود.** اگر قابلیتی تست شد و عبور کرد، سند باید در همان کامیت به‌روز شود؛ سند نباید از وضعیت واقعی کد عقب بماند.
+
+بخش‌هایی که باید به‌روز شوند:
+
+| بخش | چه چیزی |
+|------|---------|
+| ۳.۱ | فایل‌های پیاده‌سازی‌شده و مسئولیتشان |
+| ۳.۲ | حذف کلاس‌هایی که از حالت اسکلت خارج شدند |
+| ۳.۳ به بعد | بخش جدید «قابلیت پیاده‌سازی‌شده: …» برای همان قابلیت |
+| ۶ و ۷ | اگر اسکیما، کپسیتی، هوک یا option تغییر کرده |
+| ۱۱ | نقشه راه: مرحله انجام‌شده علامت بخورد و قدم بعدی مشخص شود |
+| ۱۳ | تصمیم‌ها و انحراف‌های جدید |
+
+### ۰.۳ شرط سالم بودن
+
+یک قابلیت «سالم» است اگر:
+
+- همه فایل‌های PHP بدون خطای نحوی باشند (`php -l`)
+- تست اختصاصی آن قابلیت در وردپرس واقعی **همه assertionها را پاس کند**
+- تست قابلیت‌های قبلی **رگرسیون نداشته باشد**
+- `wp-content/debug.log` هیچ notice/warning/deprecation از کد افزونه نداشته باشد
+
+اگر قابلیتی سالم نبود: ابتدا ایراد را برطرف کنید؛ تا وقتی تست پاس نشده، `ai-context.md` نباید آن قابلیت را «انجام‌شده» اعلام کند.
+
+### ۰.۴ قواعد تغییر کد
+
+- فقط فایل‌های ضروری همان قابلیت تغییر کنند؛ بخش‌های دیگر **به هیچ عنوان** تغییر نکنند.
+- ساختار فایل‌های مصوب (§۴) ثابت است؛ فایل جدید فقط وقتی ساخته شود که مسئولیتش در هیچ کلاس موجودی جا نشود.
+- هر کلاس جدید باید در نقشه `RCS_Autoloader::$map` در `plugin.php` ثبت شود.
+- در کد PHP کامنت نوشته نمی‌شود (جز هدر افزونه و `phpcs:ignore`).
+- کلاس‌ها `final` و singleton با `instance()` هستند (کلاس‌های utility فقط متد static دارند).
+
+### ۰.۵ محیط تست مرجع
+
+`WordPress 7.1.3 + MariaDB 11.8 + PHP 8.4 + WP-CLI + Elementor 4.3.5 + WooCommerce 11.2.1` — دستورالعمل کامل در بخش ۱۲.
 
 ---
 
-## 2. نسخه و پیش‌نیازها
+## ۱. هدف نهایی
+
+افزونه‌ای ماژولار برای وردپرس/ووکامرس که یک گردش کامل را پوشش می‌دهد:
+
+```text
+کاربر
+  ↓
+ویجت فرم المنتور (یا رندر مستقل)
+  ↓
+موتور فرم (Forms)
+  ↓
+درخواست (Request)
+  ↓
+نسخه‌های اصلاحی (Revision)
+  ↓
+تأیید/رد کارشناس (Approval)
+  ↓
+ساخت کوپن (Coupons → WooCommerce)
+  ↓
+اعلان پیامک (SMS → SMS.ir)
+```
+
+امکانات نهایی:
+
+- ساخت فرم (چندمرحله‌ای) و مدیریت فیلدها با منطق شرطی
+- ثبت درخواست، پیش‌نویس، و چند نسخه اصلاحی با حفظ تاریخچه
+- تأیید/رد توسط کارشناس با تعیین درصد و سقف تخفیف
+- ساخت **دقیقاً یک** کوپن WooCommerce برای هر درخواست تأییدشده
+- اعلان پیامکی مبتنی بر Pattern در SMS.ir (مشتری + مدیر + یادآوری انقضا)
+- لاگ کامل ممیزی (Audit Log) و گزارش‌گیری
+- گزینه بازگردانی/تغییر کوپن توسط مدیر
+- اتصال المنتور صرفاً به‌عنوان لایه نمایش
+
+**WooCommerce مرجع اصلی (source of truth) کوپن است.** افزونه هرگز موتور تخفیف موازی نمی‌سازد؛ فقط رابطه‌های موردنیاز خودش را در جدول‌های خودش نگه می‌دارد.
+
+---
+
+## ۲. نسخه و پیش‌نیازها
 
 | مورد | مقدار |
 |------|-------|
 | نام افزونه | Request & Coupon System |
-| Prefix کلاس‌ها | `RCS_` |
-| نسخه افزونه | 1.0.0 |
+| نسخه | 1.0.0 |
+| پیشوند ثابت‌ها | `RCS_` |
+| پیشوند کلاس‌ها | `RCS_` (بدون namespace — سراسری) |
 | حداقل PHP | 7.4 |
 | حداقل وردپرس | 6.0 |
-| حداقل ووکامرس | 7.0 |
+| حداقل ووکامرس | 7.0 (اختیاری؛ فقط برای کوپن لازم است) |
 | Text Domain | `request-coupon-system` |
-| Role اضافه شده | `rcs_expert` |
-
-فایل‌ها:
-- `D:\VibeCoding\kilo-ai\plugin.php` — نقطه ورود اصلی
-- `D:\VibeCoding\kilo-ai\ai-context.md` — این فایل
+| Role اختصاصی | `rcs_expert` |
+| پیشوند جدول‌ها | `rcs_` |
+| پیشوند کوپن‌ها | `rcs_` |
+| پیشوند Optionها | `rcs_` |
+| پیشوند هوک‌ها | `rcs_` |
+| پیشوند Capabilityها | `rcs_` |
 
 ---
 
-## 3. ساختار دایرکتوری
+## ۳. وضعیت فعلی (مهم‌ترین بخش)
 
+### ۳.۱ کاملاً پیاده‌سازی‌شده و تست‌شده
+
+| فایل | مسئولیت |
+|------|----------|
+| `plugin.php` | هدر افزونه، ثابت‌ها، `RCS_Autoloader` (نقشه دستی)، رجیستر کردن قلاب‌های فعال/غیرفعال‌سازی، بوت `RCS_Core_Plugin` |
+| `uninstall.php` | نقطه ورود حذف: تعریف `RCS_UNINSTALLING` و فراخوانی `RCS_Core_Uninstaller::uninstall()` |
+| `includes/Core/Plugin.php` | ارکستراتور: بوت، بارگذاری textdomain، راه‌اندازی ماژول‌ها روی `plugins_loaded` (اولویت ۲۰) |
+| `includes/Core/Activator.php` | بررسی پیش‌نیازها، ساخت جدول‌ها، نقش‌ها، کپسیتی‌ها، تنظیمات پیش‌فرض، زمان‌بندی |
+| `includes/Core/Deactivator.php` | لغو زمان‌بندی + flush rewrite (داده حفظ می‌شود) |
+| `includes/Core/Uninstaller.php` | حذف کامل داده: کوپن‌های ساخته‌شده توسط افزونه، جدول‌ها، optionها، نقش، کپسیتی‌ها |
+| `includes/Core/Requirements.php` | بررسی PHP/WP/WooCommerce/Elementor؛ خطاها در transient ذخیره می‌شوند (فعال‌سازی مسدود نمی‌شود) |
+| `includes/Database/Schema.php` | تعریف ۷ جدول + `CREATE TABLE` برای dbDelta + `table_exists()` + `drop()` |
+| `includes/Database/Installer.php` | `install()` / `maybe_upgrade()` / `drop()` |
+| `includes/Logs/LogManager.php` | نوشتن رکورد ممیزی (actor، role، action، IP، نتیجه، خطا) |
+| `includes/Logs/LogRepository.php` | درج در جدول `rcs_logs` |
+| `includes/Scheduler/Scheduler.php` | ثبت/لغو کرون‌های روزانه و ساعتی |
+| `includes/Approval/ExpertRole.php` | ساخت/به‌روزرسانی/حذف نقش `rcs_expert` و کپسیتی‌های آن |
+| `includes/Approval/ApprovalManager.php` | گردش تأیید: اول صدور کوپن، بعد ساخت و ارسال پیامک مشتری و مدیر + علامت‌گذاری وضعیت درخواست |
+| `includes/Approval/ApprovalValidator.php` | بررسی‌های پیش از گردش و رد: عضو بودن کاربر اجراکننده، کپسیتی، عضو بودن صاحب درخواست، شماره موبایل، ووکامرس، قاعده یک کوپن، وضعیت درخواست |
+| `includes/Requests/RequestManager.php` | منطق درخواست: خواندن، فهرست، تغییر وضعیت (تأیید/رد)، تشخیص شماره موبایل مشتری |
+| `includes/Requests/RequestRepository.php` | دسترسی داده به `rcs_requests` (خواندن، فهرست، شمارش، تغییر وضعیت) |
+| `includes/Requests/RequestAccess.php` | مالکیت و وضعیت درخواست: مالک، pending، تأیید، رد |
+| `includes/Revisions/RevisionManager.php` | نسخه جاری و تاریخچه بازنگری درخواست، کدگذاری داده ارسالی |
+| `includes/Revisions/RevisionRepository.php` | دسترسی داده به `rcs_request_revisions` |
+| `admin/Admin.php` | ثبت منوی پنل + ۶ زیرمنو + نمایش notice خطاهای پیش‌نیاز |
+| `admin/pages/RequestsPage.php` | فهرست و جزئیات درخواست، تایید و رد درخواست با nonce و کپسیتی |
+| `admin/views/requests/index.php` | جدول فهرست درخواست‌ها با فیلتر و صفحه‌بندی |
+| `admin/views/requests/detail.php` | صفحه جزئیات درخواست: داده ارسالی، تاریخچه نسخه، فرم تایید و رد |
+| `admin/assets/css/rcs-requests.css` | استایل صفحه درخواست‌ها |
+| `admin/pages/ReportsPage.php` · `SettingsPage.php` | صفحه‌های placeholder (فقط بررسی کپسیتی و رندر ویو — بدون UI نهایی) |
+| `admin/views/reports|settings/index.php` | ویوهای placeholder |
+| `admin/pages/FormsPage.php` | فرم‌ساز: فهرست فرم‌ها، صفحه ساخت/ویرایش، ذخیره و حذف با nonce و کپسیتی |
+| `admin/views/forms/index.php` | جدول فهرست فرم‌ها |
+| `admin/views/forms/builder.php` | صفحه ساخت فرم: نام، وضعیت، توضیح و ردیف‌های فیلد |
+| `admin/assets/css/rcs-forms.css` + `admin/assets/js/rcs-forms.js` | استایل و اسکریپت فرم‌ساز (افزودن/حذف فیلد) |
+| `includes/Forms/FormManager.php` | منطق فرم: ساخت، ویرایش، حذف، خواندن، فهرست فرم‌های منتشرشده |
+| `includes/Forms/FormRepository.php` | دسترسی داده به `rcs_forms` (درج، به‌روزرسانی، حذف، خواندن، کوئری) |
+| `includes/Forms/FieldManager.php` | تعریف ۱۰ نوع فیلد، ذخیره/خواندن فیلدها، نرمال‌سازی و تولید markup هر فیلد |
+| `includes/Forms/SubmissionHandler.php` | endpoint ارسال فرم: بررسی عضو بودن کاربر، بررسی nonce، اعتبارسنجی مقادیر، ثبت لاگ |
+| `frontend/Frontend.php` | رندر فرم + وضعیت عضویت بازدیدکننده + رجیستر/enqueue استایل فرم + فعال‌سازی endpoint ارسال |
+| `frontend/views/form.php` | قالب HTML فرم (فیلدها، nonce، دکمه ارسال، پیام نتیجه) و پیام ورود برای مهمان |
+| `frontend/assets/css/rcs-form.css` | استایل فرم (grid، برچسب، input، notice) |
+| `elementor/Elementor.php` | اتصال به لایه یکپارچه‌سازی المنتور |
+| `elementor/widgets/FormWidget.php` | ویجت فرم: انتخاب فرم، عنوان/توضیح، متن دکمه، چیدمان ستون‌ها |
+| `includes/Integrations/Elementor/ElementorIntegration.php` | تشخیص المنتور، ثبت دسته `rcs`، ثبت ویجت (در try/catch) |
+| `includes/Integrations/SMSIr/SmsIrClient.php` | ارتباط با API سرویس‌دهنده: احراز هویت، ارسال Pattern، پاسخ و خطای سرویس‌دهنده |
+| `includes/Coupons/CouponManager.php` | منطق کوپن: صدور، قاعده «یک کوپن برای هر درخواست»، غیرفعال‌سازی، خواندن روابط |
+| `includes/Coupons/CouponValidator.php` | اعتبارسنجی پارامترهای کوپن (درصد، سقف، کاربر، درخواست، یکتایی کد) |
+| `includes/Coupons/CouponOwnership.php` | لایه محدودیت مالکیت: کاربر جاری = مالک کوپن، غیرفعال بودن، انقضا |
+| `includes/Coupons/WooCommerceCoupon.php` | آداپتور API کوپن ووکامرس: ساخت، غیرفعال‌سازی، ویرایش، تولید کد یکتا |
+| `admin/pages/CouponsPage.php` | فهرست کوپن‌های صادرشده + عملیات غیرفعال‌سازی (nonce و کپسیتی `rcs_manage_coupons`) |
+| `admin/views/coupons/index.php` | جدول کوپن‌ها (کد، درخواست، کاربر، درصد، انقضا، وضعیت، عملیات) |
+| `includes/SMS/SmsManager.php` | منطق پیامک: ساخت رکورد، ارسال به مشتری/مدیر، نرمال‌سازی شماره، خواندن رکوردها |
+| `includes/SMS/SmsTemplateManager.php` | انواع پیامک، شناسه Pattern و نگاشت پارامترها |
+| `includes/SMS/SmsSender.php` | ارسال یک رکورد از طریق کلاینت سرویس‌دهنده |
+| `includes/SMS/SmsRetry.php` | تلاش مجدد روی همان رکورد پیامک ناموفق |
+| `admin/pages/SmsPage.php` | صفحه تنظیمات و تاریخچه پیامک + عملیات تلاش مجدد (با nonce و کپسیتی) |
+| `admin/views/sms/index.php` | فرم تنظیمات SMS.ir و جدول تاریخچه پیامک‌ها |
+| `includes/Integrations/WooCommerce/WooCommerceIntegration.php` | تشخیص ووکامرس + جای قلاب‌های ووکامرس |
+| `includes/Integrations/SMSIr/SmsIrClient.php` | نگهداری کلاینت SMS.ir (فعلاً فقط بررسی پیکربندی) |
+| `includes/Requests/RequestStatus.php` | ثابت‌های وضعیت درخواست |
+| `includes/SMS/SmsStatus.php` | ثابت‌های وضعیت پیامک |
+
+### ۳.۲ فقط اسکلت (کلاس خالی، بدون منطق)
+
+`RCS_Forms_Validation`، `RCS_Forms_ConditionalLogic`، `RCS_Forms_DraftManager`، `RCS_Forms_MultiStepManager`، `RCS_Reports_ReportManager`.
+
+**قانون:** هر کلاس اسکلت، بدنه خالی دارد و فقط `instance()` دارد. منطق کسب‌وکار را داخل همین کلاس‌ها بنویسید، نه در فایل/کلاس جدید.
+
+---
+
+## ۳.۳ قابلیت پیاده‌سازی‌شده: فرم‌ساز + ویجت المنتور
+
+### چه چیزی ساخته شد
+
+- **فرم‌ساز در پنل** (`Request & Coupon > Forms`): فهرست فرم‌ها، ساخت فرم جدید، ویرایش، حذف (با nonce و کپسیتی `rcs_manage_forms`).
+- **تعریف فیلد** با ۱۰ نوع مصوب: text، textarea، number، email، mobile، select، radio، checkbox، date، file — هر فیلد دارای key، label، required، options، step و sort_order.
+- **رندر فرم در فرانت** با قالب `frontend/views/form.php`، nonce، نام فیلدها به شکل `rcs_field[key]` و استایل مستقل `rcs-form`.
+- **ویجت المنتور** `RCS Form` با کنترل‌های: انتخاب فرم (فقط فرم‌های منتشرشده)، نمایش عنوان، نمایش توضیح، متن دکمه ارسال و چیدمان ۱/۲/۳ ستونی. ویجت در دسته‌ی اختصاصی **Request & Coupon** (`rcs`) ظاهر می‌شود.
+- **endpoint ارسال** `admin-post.php?action=rcs_submit_form`: بررسی nonce، اعتبارسنجی فیلدهای الزامی/ایمیل/موبایل، ثبت در لاگ ممیزی و بازگشت با پیام نتیجه.
+
+### سازگاری با المنتور ۴.x (Elementor 4.3.5)
+
+| نکته | تصمیم |
+|-------|--------|
+| کلاس پایه | `extends \Elementor\Widget_Base` (امضای `register( Widget_Base )` در المنتور ۴ تایپ‌هینت دارد) |
+| `is_dynamic_content()` | با امضای `: bool` مطابق والد در المنتور ۴ |
+| لود شدن فایل ویجت | کلاس داخل `if ( class_exists( '\Elementor\Widget_Base' ) )` اعلام شده تا بدون المنتور هرگز fatal ندهد |
+| ثبت دسته | `elementor/elements/categories_registered` + `add_category()` (در ۴.x taxonomy قدیمی `elementor_element_category` حذف شده) |
+| fallback دسته | اگر دسته `rcs` ثبت نشده باشد `general` برگردانده می‌شود (سازگار با ۳.x) |
+| گزینه‌های کنترل SELECT | در فرانت به‌خاطر `Performance::should_optimize_controls()` حذف می‌شوند (رفتار خود المنتور)؛ در ادیتور سالم هستند |
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- ارسال فرم **درخواست/نسخه ایجاد نمی‌کند**؛ فقط اعتبارسنجی و ثبت لاگ انجام می‌شود. ساخت Request و Revision در فاز ماژول Requests انجام خواهد شد.
+- منطق شرطی، چندمرحله‌ای و آپلود فایل (اعتبارسنجی MIME/حجم) هنوز پیاده نشده‌اند.
+- استایل ادیتور المنتور (لحظه‌ای) برای ویجت اضافه نشده است.
+
+---
+
+## ۳.۵ قابلیت پیاده‌سازی‌شده: الزام عضو بودن کاربر (فرم‌ها فقط برای اعضا)
+
+### قانون
+
+ارسال هر فرم فقط برای **کاربر واردشده (عضو)** مجاز است. این قانون **سراسری** است و در حال حاضر قابل خاموش‌کردن نیست.
+
+### رفتار مهمان (کاربر وارد نشده)
+
+| مورد | رفتار |
+|------|-------|
+| نمایش فرم در فرانت | به‌جای فرم، پیام «Only registered members can send this form» + لینک ورود نمایش داده می‌شود |
+| فیلدها و دکمه ارسال | رندر نمی‌شوند (ساختار فرم به مهمان افشا نمی‌شود) |
+| nonce | رندر نمی‌شود |
+| ارسال مستقیم endpoint | به صفحه ورود وردپرس هدایت می‌شود با `rcs_login_required=1` و `redirect_to` |
+| لاگ ممیزی | هیچ رکوردی ثبت نمی‌شود (درخواست اصلاً پردازش نمی‌شود) |
+
+### ترتیب بررسی‌ها در endpoint (بند ۳۸ سند معماری)
+
+```text
+1. Authentication  → is_user_logged_in()   (اولین بررسی، قبل از nonce)
+2. Nonce           → wp_verify_nonce()
+3. Form exists     → ۴۰۴ در غیر این صورت
+4. Field validation → پیام خطا به کاربر
+5. Audit log       → ثبت در rcs_logs
 ```
-kilo-ai/
-├── plugin.php                    # نقطه ورود؛ ثابت‌ها، autoloader، هوک‌های نصب/حذف
+
+> **چرا بررسی عضویت قبل از nonce:** nonce برای کاربر واردنشده (uid = 0) هم قابل تولید است، پس اگر nonce زودتر بررسی شود، مهمان با خطای ۴۰۳ مواجه می‌شود به‌جای هدایت به صفحه ورود. بنابراین ترتیب بالا رعایت شده است.
+
+### فایل‌های درگیر
+
+| فایل | تغییر |
+|------|-------|
+| `includes/Forms/SubmissionHandler.php` | بررسی `is_user_logged_in()` در ابتدای `handle()` + هدایت به صفحه ورود |
+| `frontend/Frontend.php` | انتقال وضعیت عضویت و لینک ورود به قالب + متد `get_login_url()` |
+| `frontend/views/form.php` | نمایش پیام ورود به‌جای فرم برای مهمان |
+| `frontend/assets/css/rcs-form.css` | استایل کادر پیام ورود |
+
+> در ماژول Requests (قدم بعدی) همین ترتیب باید در `RCS_Requests_RequestAccess` رعایت شود: احراز هویت → بررسی مالکیت → بررسی وضعیت.
+
+---
+
+## ۳.۴ قابلیت پیاده‌سازی‌شده: پیامک SMS.ir
+
+### قرارداد سرویس‌دهنده
+
+```text
+Endpoint : POST https://api.sms.ir/v1/send/verify
+Headers  : x-api-key: <API key> | Content-Type: application/json | Accept: text/plain
+Body     : { "mobile": "9120000000", "templateId": 111111, "parameters": [ { "name": "Code", "value": "1234" } ] }
+Response : { "status": 1, "message": "موفق", "data": { "messageId": 89545112, "cost": 1.0 } }
+```
+
+- پیامک **الگویی (Pattern)** است؛ متن پیام هرگز در افزونه ذخیره یا ارسال نمی‌شود.
+- کد وضعیت سرویس‌دهنده: `1` موفق، `0` خطای سامانه، `10` کلید نامعتبر، `11` کلید غیرفعال، `12` محدود به IP.
+- کدهای HTTP: ۲۰۰ موفق، ۴۰۰ خطای منطقی، ۴۰۱ احراز هویت، ۴۲۹ تعداد درخواست زیاد، ۵۰۰ خطای غیرمنتظره.
+- ارتباط با HTTP API وردپرس (`wp_remote_request`) انجام می‌شود تا در تست قابل شبیه‌سازی باشد.
+
+### انواع پیامک و الگوها
+
+| نوع | گیرنده | پارامترهای پیش‌فرض |
+|-----|--------|---------------------|
+| `approval_customer` | مشتری | name, discount, expiry |
+| `approval_admin` | مدیر | name, discount, request |
+| `rejection_customer` | مشتری | name, reason |
+| `expiry_reminder_customer` | مشتری | name, expiry |
+
+هر پیامک یک رکورد مستقل در `rcs_sms` است؛ شکست یکی روی دیگری اثر ندارد.
+
+### تنظیمات (option `rcs_sms_settings`)
+
+| کلید | توضیح | ضروری؟ |
+|------|--------|--------|
+| `api_key` | کلید API پنل برنامه‌نویسان SMS.ir (کلید Sandbox هم پذیرفته می‌شود) | برای ارسال لازم |
+| `pattern_ids` | نگاشت نوع پیامک → شناسه Pattern | برای ارسال لازم |
+| `sender_line` | خط ارسال | **اختیاری — بدون ستاره و بدون `required`** |
+| `admin_numbers` | شماره‌های مدیر (هر خط یک شماره) | برای پیامک به مدیر لازم |
+
+نگاشت نام پارامترها در option جداگانه `rcs_sms_parameters` نگهداری می‌شود (نام منطقی → نام پارامتر در قالب سرویس‌دهنده).
+
+> **خط ارسال** چون ارسال Pattern از خط خدماتی ثبت‌شده در پنل انجام می‌شود، در API ارسال پارامتری به نام آن وجود ندارد؛ فیلد آن فقط نگهداری می‌شود و هرگز اجباری نیست.
+
+### قواعد ارسال و تلاش مجدد
+
+- شماره موبایل پیش از ذخیره نرمال می‌شود: `09120000000`، `+989120000000` و `00989120000000` همگی به `9120000000` تبدیل می‌شوند.
+- ارسال به مشتری: `SmsManager::send_to_customer( $type, $recipient, $values, $context )`.
+- ارسال به مدیر: `SmsManager::send_to_admin( $type, $values, $context )` — برای **هر** شماره مدیر یک رکورد جداگانه ساخته و ارسال می‌شود.
+- تلاش مجدد: `SmsRetry::retry( $sms_id )` فقط روی رکورد `failed`، روی **همان رکورد**، با افزایش `retry_count` و ثبت `last_retry_at`.
+- رکورد `sent` دوباره ارسال یا retry نمی‌شود (idempotent).
+- هر ارسال موفق/ناموفق/تلاش مجدد در لاگ ممیزی ثبت می‌شود (`SMS Sent` / `SMS Failed` / `SMS Retried`).
+- ماژول SMS هیچ وابستگی‌ای به Coupons یا Request ندارد؛ گیرنده را caller تعیین می‌کند.
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- ارسال خودکار پیامک‌ها در گردش تأیید/رد (به ماژول Approval وابسته است).
+- گزارش وضعیت تحویل (Delivery) از API سرویس‌دهنده.
+- صف پیامک و زمان‌بندی ارسال.
+
+---
+
+## ۳.۶ قابلیت پیاده‌سازی‌شده: ماژول کوپن (WooCommerce)
+
+### اصل حاکم
+
+**ووکامرس تنها مرجع کوپن است.** افزونه هیچ موتور تخفیف موازی نمی‌سازد؛ کوپن با `WC_Coupon` ساخته می‌شود و فقط رابطه‌های خودش در `rcs_plugin_coupons` نگهداری می‌شوند.
+
+### تنظیمات کوپن (بند ۱۳ سند معماری)
+
+| قاعده | پیاده‌سازی ووکامرس |
+|-------|---------------------|
+| تخفیف درصدی | `set_discount_type('percent')` + `set_amount()` |
+| سقف تخفیف | `set_maximum_amount()` (خالی = بدون سقف) |
+| شامل همه محصولات | `set_product_ids(array())` و `set_excluded_product_ids(array())` |
+| شامل همه دسته‌ها | `set_product_categories(array())` و `set_excluded_product_categories(array())` |
+| شامل محصولات تخفیف‌دار | `set_exclude_sale_items(false)` |
+| بدون حداقل خرید | `set_minimum_amount('')` |
+| individual use | `set_individual_use(true)` |
+| سقف استفاده کلی = ۱ | `set_usage_limit(1)` |
+| سقف استفاده هر کاربر = ۱ | `set_usage_limit_per_user(1)` |
+| محدود به صاحب کوپن | `set_email_restrictions([ایمیل کاربر])` + لایه مالکیت افزونه |
+| انقضا = ۷ روز پس از تأیید | `set_date_expires(time() + 604800)` |
+| کد یکتا | تولید تصادفی ۱۲ کاراکتری + بررسی یکتایی |
+| فقط یک کوپن برای هر درخواست | بررسی در `issue()` + قید `UNIQUE KEY coupon_request_id` |
+
+> ووکامرس ۱۱.x محدودیت «User ID» ندارد و فقط محدودیت ایمیل را پشتیبانی می‌کند؛ بنابراین محدودیت دقیق User ID در لایه مالکیت افزونه (`rcs_plugin_coupons.user_id` + `CouponOwnership`) اعمال می‌شود — دقیقاً همان‌طور که بند ۱۴ سند معماری توضیح می‌دهد.
+
+### یکتایی کد
+
+`WooCommerceCoupon::code_exists()` با یک کوئری فقط‌خواندنی روی پست‌های `shop_coupon` (همه وضعیت‌ها: publish/trash/draft) بررسی می‌کند تا کد غیرفعال‌شده هم دوباره استفاده نشود. در صورت درخواست کد مشخص، تکراری بودن با `WP_Error` رد می‌شود.
+
+### چرخه حیات
+
+```text
+Not Created → Active (publish) → Used → Expired
+                     ↓
+                Disabled (trash)   ← فقط با کپسیتی rcs_manage_coupons و nonce
+```
+
+- غیرفعال‌سازی از طریق `set_status('trash')` (روش رسمی ووکامرس) انجام می‌شود؛ کوپن حذف نمی‌شود.
+- `CouponOwnership::can_use()` فقط وقتی true است که کوپن غیرفعال نباشد، منقضی نشده باشد و کاربر جاری مالک آن باشد.
+- صدور و غیرفعال‌سازی در لاگ ممیزی ثبت می‌شود (`Coupon Created` / `Coupon Disabled`).
+- متای `_rcs_managed_coupon` روی کوپن ووکامرس ثبت می‌شود؛ فقط همین کوپن‌ها در uninstall حذف می‌شوند.
+
+### API ماژول
+
+```php
+RCS_Coupons_CouponManager::instance()->issue( $request_id, $user_id, array( 'amount' => 20, 'maximum_amount' => 500, 'code' => '' ) );
+// → int (شناسه رابطه) یا WP_Error
+
+RCS_Coupons_CouponManager::instance()->disable( $relation_id );
+// → bool
+
+RCS_Coupons_CouponManager::instance()->get_by_request( $request_id );
+RCS_Coupons_CouponManager::instance()->can_use( $relation_id, $user_id );
+```
+
+> صدور کوپن از گردش تأیید (ماژول Approval) انجام می‌شود و **همیشه به یک درخواست تعلق دارد**؛ کوپن بدون درخواست صادر نمی‌شود (قید UNIQUE روی `request_id` هم این را تضمین می‌کند).
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- ویرایش درصد تخفیف و سقف تخفیف توسط مدیر (بند ۱۶ سند معماری) — آداپتور `update_amount()` آماده است ولی هنوز به رابط پنل وصل نشده.
+- فعال‌سازی دوباره کوپن غیرفعال‌شده (بند ۱۰ مورد ۷ تعیین‌نشده — عمداً پیاده نشده).
+- ثبت «کوپن استفاده شد» و «کوپن منقضی شد» در لاگ (به ووکامرس checkout وابسته است).
+- استفاده از کوپن توسط مشتری در سبد خرید (تست انتها‌به‌انتها با ووکامرس).
+
+---
+
+## ۳.۷ قابلیت پیاده‌سازی‌شده: گردش تأیید (اول کوپن، بعد پیامک)
+
+### ترتیب قطعی
+
+```text
+ApprovalManager::approve( $request_id, $user_id, $args )
+  1. ApprovalValidator  → همه بررسی‌ها (در صورت خطا: هیچ کوپن و هیچ پیامکی)
+  2. CouponManager::issue()  → ساخت کوپن در ووکامرس
+       ✗ شکست → هیچ پیامکی ارسال نمی‌شود و خطا برگردانده می‌شود
+  3. SmsManager::send_to_customer( approval_customer )  → رکورد مستقل برای مشتری
+  4. SmsManager::send_to_admin( approval_admin )        → یک رکورد مستقل برای هر شماره مدیر
+```
+
+**قانون اصلی:** تا وقتی کد تخفیف با موفقیت ساخته نشده باشد، هیچ پیامکی ارسال نمی‌شود.
+
+### حالت‌های خطا
+
+| حالت | کوپن | پیامک | نتیجه |
+|-------|------|-------|-------|
+| اعتبارسنجی رد شد | ساخته نمی‌شود | ارسال نمی‌شود | `WP_Error` |
+| ساخت کوپن شکست خورد | ساخته نمی‌شود | **ارسال نمی‌شود** | `WP_Error` + لاگ `Request Approved / failed` |
+| پیامک مشتری شکست خورد | **در سیستم می‌ماند و فعال است** | وضعیت `failed` | مدیر می‌تواند از پنل پیامک را دوباره بفرستد |
+| پیامک مدیر شکست خورد | در سیستم می‌ماند | فقط همان رکورد `failed` | پیامک موفق دیگر باطل نمی‌شود |
+
+تلاش مجدد پیامک (`RCS_SMS_SmsRetry`) روی **همان رکورد** انجام می‌شود: `retry_count` افزایش می‌یابد، `last_retry_at` ثبت می‌شود و **هیچ کوپن یا درخواست یا نسخه‌ی جدیدی ساخته نمی‌شود**.
+
+### بررسی‌های `ApprovalValidator`
+
+| بررسی | کد خطا |
+|-------|---------|
+| کاربر اجراکننده وارد شده است | `rcs_approval_login_required` |
+| کاربر اجراکننده کپسیتی `rcs_approve_requests` را دارد | `rcs_approval_forbidden` |
+| درخواست معتبر است | `rcs_approval_request_required` |
+| صاحب درخواست **عضو ثبت‌شده سایت** است | `rcs_approval_member_required` |
+| شماره موبایل صاحب درخواست داده شده است | `rcs_approval_mobile_required` |
+| ووکامرس فعال است | `rcs_approval_woocommerce_missing` |
+| درخواست هنوز کوپن نگرفته است | `rcs_approval_already_approved` |
+
+### مقادیر پیامک
+
+```php
+array(
+	'name'     => 'نام نمایشی مشتری',
+	'code'     => 'کد تخفیف ساخته‌شده',
+	'discount' => '20%',
+	'expiry'   => 'تاریخ انقضای کوپن',
+	'request'  => 'شناسه درخواست',
+)
+```
+
+نام پارامترهای هر نوع پیامک در صفحه‌ی SMS قابل تنظیم است (option `rcs_sms_parameters`) و نگاشت پیش‌فرض:
+
+| نوع | پارامترهای پیش‌فرض |
+|-----|---------------------|
+| `approval_customer` | name, code, discount, expiry |
+| `approval_admin` | name, code, discount, request |
+| `rejection_customer` | name, reason |
+| `expiry_reminder_customer` | name, code, expiry |
+
+### API
+
+```php
+RCS_Approval_ApprovalManager::instance()->approve( $request_id, $user_id, array(
+	'amount'          => 20,          // درصد تخفیف
+	'maximum_amount'  => 500,         // سقف تخفیف (اختیاری)
+	'customer_mobile' => '09120000000',
+) );
+// → array( coupon_id, coupon_code, customer_sms_id, customer_sms_status, admin_sms_ids, admin_sms_status )
+// یا WP_Error
+```
+
+### آنچه هنوز در این قابلیت انجام نشده
+
+- علامت‌گذاری وضعیت درخواست به `approved` و قفل کردن آن (به ماژول Requests وابسته است).
+- بررسی وضعیت خودِ درخواست (در انتظار بررسی بودن) — به ماژول Requests وابسته است.
+- رابط کاربری کارشناس برای تأیید/رد (به ماژول Requests وابسته است).
+- گردش رد درخواست و پیامک مربوط به آن.
+
+---
+
+## ۴. ساختار کامل دایرکتوری
+
+```text
+plugin-root/
+├── plugin.php                 ← نقطه ورود، ثابت‌ها، autoloader، قلاب‌های lifecycle
+├── uninstall.php              ← نقطه ورود حذف
+├── readme.txt                 ← ریدمی استاندارد وردپرس
+├── ai-context.md              ← همین سند
+│
+├── includes/
+│   ├── Core/
+│   │   ├── Plugin.php         ← RCS_Core_Plugin
+│   │   ├── Activator.php      ← RCS_Core_Activator
+│   │   ├── Deactivator.php    ← RCS_Core_Deactivator
+│   │   ├── Uninstaller.php    ← RCS_Core_Uninstaller
+│   │   └── Requirements.php   ← RCS_Core_Requirements
+│   ├── Forms/
+│   │   ├── FormManager.php · FormRepository.php · FieldManager.php
+│   │   ├── SubmissionHandler.php · Validation.php · ConditionalLogic.php
+│   │   └── DraftManager.php · MultiStepManager.php
+│   ├── Requests/
+│   │   ├── RequestManager.php · RequestRepository.php
+│   │   └── RequestStatus.php · RequestAccess.php
+│   ├── Revisions/
+│   │   └── RevisionManager.php · RevisionRepository.php
+│   ├── Approval/
+│   │   └── ApprovalManager.php · ApprovalValidator.php · ExpertRole.php
+│   ├── Coupons/
+│   │   └── CouponManager.php · CouponValidator.php
+│   │       CouponOwnership.php · WooCommerceCoupon.php
+│   ├── SMS/
+│   │   └── SmsManager.php · SmsTemplateManager.php · SmsSender.php
+│   │       SmsRetry.php · SmsStatus.php
+│   ├── Scheduler/Scheduler.php
+│   ├── Logs/LogManager.php · LogRepository.php
+│   ├── Reports/ReportManager.php
+│   ├── Integrations/
+│   │   ├── WooCommerce/WooCommerceIntegration.php
+│   │   ├── SMSIr/SmsIrClient.php
+│   │   └── Elementor/ElementorIntegration.php
+│   └── Database/Installer.php · Schema.php
+│
 ├── admin/
-│   └── Admin.php                 # RCS_Admin_Admin — پنل مدیریت (استبدال)
+│   ├── Admin.php
+│   ├── pages/  FormsPage · RequestsPage · CouponsPage · SmsPage · ReportsPage · SettingsPage
+│   ├── views/   forms/ requests/ coupons/ sms/ reports/ settings/  (هر کدام index.php)
+│   └── assets/  css/ js/
+│
 ├── frontend/
-│   └── Frontend.php              # RCS_Frontend_Frontend — فرانت‌اند (استبدال)
+│   ├── Frontend.php
+│   ├── views/
+│   └── assets/  css/ js/
+│
 ├── elementor/
-│   ├── Elementor.php             # RCS_Elementor_Elementor — افزودن ویجت المنتور
-│   └── widgets/
-│       └── FormWidget.php        # RCS_Elementor_FormWidget — ویجت فرم
-└── includes/
-    ├── Core/
-    │   ├── Plugin.php            # RCS_Core_Plugin — orquestrator zentrale
-    │   ├── Activator.php         # RCS_Core_Activator — عملیات نصب
-    │   ├── Deactivator.php       # RCS_Core_Deactivator — عملیات غیرفعال‌سازی
-    │   ├── Uninstaller.php       # RCS_Core_Uninstaller — عملیات حذف کامل
-    │   └── Requirements.php      # RCS_Core_Requirements — بررسی پیش‌نیازها
-    ├── Forms/
-    │   ├── FormManager.php
-    │   ├── FormRepository.php
-    │   ├── FieldManager.php
-    │   ├── Submission-Handler.php
-    │   ├── Validation.php
-    │   ├── ConditionalLogic.php
-    │   ├── DraftManager.php
-    │   └── MultiStepManager.php
-    ├── Requests/
-    │   ├── RequestManager.php
-    │   ├── RequestRepository.php
-    │   ├── RequestStatus.php
-    │   └── RequestAccess.php
-    ├── Revisions/
-    │   ├── RevisionManager.php
-    │   └── RevisionRepository.php
-    ├── Approval/
-    │   ├── ApprovalManager.php
-    │   ├── ApprovalValidator.php
-    │   └── ExpertRole.php
-    ├── Coupons/
-    │   ├── CouponManager.php
-    │   ├── CouponValidator.php
-    │   ├── CouponOwnership.php
-    │   └── WooCommerceCoupon.php
-    ├── SMS/
-    │   ├── SmsManager.php
-    │   ├── SmsTemplateManager.php
-    │   ├── SmsSender.php
-    │   ├── SmsRetry.php
-    │   └── SmsStatus.php
-    ├── Scheduler/
-    │   └── Scheduler.php
-    ├── Logs/
-    │   ├── LogManager.php
-    │   └── LogRepository.php
-    ├── Reports/
-    │   └── ReportManager.php
-    ├── Integrations/
-    │   ├── WooCommerce/
-    │   │   └── WooCommerceIntegration.php
-    │   ├── SMSIr/
-    │   │   └── SmsIrClient.php
-    │   └── Elementor/
-    │       └── ElementorIntegration.php
-    └── Database/
-        ├── Installer.php
-        └── Schema.php
+│   ├── Elementor.php
+│   └── widgets/FormWidget.php
+│
+├── templates/
+└── languages/
 ```
 
-کلاس‌ها جميعًا **singleton** هستند (متد `instance()`،构造\_privated).
+**ساختار ثابت است.** فایل جدید فقط وقتی ساخته شود که مسئولیت آن در هیچ کلاس موجودی جا نشود.
 
 ---
 
-## 4. فلوی فعال‌سازی (Activation Flow)
+## ۵. چرخه حیات (Lifecycle)
 
-1. وردپرس فایل `plugin.php` را include می‌کند.
-2. `RCS_Autoloader::instance()` در خط 148 فراخوانی می‌شود → autoloader ثبت می‌شود **قبل از هر هوکی**.
-3. `register_activation_hook` از **static method callback** استفاده می‌کند (`array('RCS_Core_Activator', 'activate')`) نه closure، چون closure قابل serialize نیست و باعث خطای "Serialization of 'Closure' is not allowed" می‌شود.
-4. `RCS_Core_Activator::activate()` اجرا می‌شود:
-   - `check_requirements()` — بررسی PHP/WP/WC و ذخیره خطاها در transient (بدون `wp_die` تا فعال‌سازی مسدود نشود)
-   - `create_tables()` —dbDelta برای 7 جدول
-   - `create_roles()` — افزودن نقش `rcs_expert`
-   - `create_default_settings()` — تنظیمات پیش‌فرض (SMS.ir، expired coupon، ...)
-   - `register_scheduled_tasks()` — رویداد روزانه `rcs_coupon_expiry_reminder`
-5. `add_action('plugins_loaded', 'rcs_init')` برای khởi 동 لایفرانویم.
+### فعال‌سازی — `RCS_Core_Activator::activate()`
 
-### جداول دیتابیس (dbDelta)
-1. `rcs_forms`
-2. `rcs_form_fields`
-3. `rcs_requests`
-4. `rcs_request_revisions`
-5. `rcs_plugin_coupons`
-6. `rcs_sms`
-7. `rcs_logs`
+```text
+register_activation_hook → RCS_Core_Activator::activate()
+  1. RCS_Core_Requirements::store()        خطاها در transient (بدون wp_die)
+  2. RCS_Database_Installer::install()      dbDelta روی ۷ جدول + option نسخه دیتابیس
+  3. RCS_Approval_ExpertRole::create()      نقش rcs_expert + ۳ کپسیتی
+  4. grant_admin_capabilities()             ۷ کپسیتی مدیریتی به administrator
+  5. create_default_settings()              rcs_sms_settings + rcs_general_settings
+  6. RCS_Scheduler_Scheduler::schedule_events()  ۲ کرون
+  7. update_option( 'rcs_version' )         نشانه فعال بودن افزونه
+  8. flush_rewrite_rules()
+```
 
----
+### اجرا (Runtime)
 
-## 5. Autoloader (manual map)
+```text
+WordPress → plugin.php → RCS_Autoloader::register()
+          → RCS_Core_Plugin::instance()->boot()
+            → 'init' (priority 0)        → load_plugin_textdomain
+            → 'plugins_loaded' (prio 20)  → init_modules():
+                 RCS_Database_Installer::maybe_upgrade()
+                 Logs · Scheduler · Frontend · Elementor · WooCommerce
+                 + Admin (فقط اگر is_admin())
+```
 
-در `plugin.php` کلاس `final class RCS_Autoloader` تعریف شده است:
-- Map دستی کلاس→مسیر Relative داخل `includes/`
-- مسیرهای `admin/`، `frontend/`، `elementor/` با `../` شروع می‌شوند (چون径اب از `includes/` است)
-- پسوند `.php` به نام کلاس اضافه می‌شود اگر در map نباشد
-- اگر فایل readable نباشد، false برگردانده می‌شود (بدون خطا)
+### غیرفعال‌سازی — `RCS_Core_Deactivator::deactivate()`
 
-نکته مهم: کلیدهای map باید دقیقاً با نام کلاس (بدون `RCS_`) مطابقت داشته باشند.
+```text
+wp_clear_scheduled_hook( rcs_coupon_expiry_reminder )
+wp_clear_scheduled_hook( rcs_sms_retry )
+flush_rewrite_rules()
+→ هیچ داده‌ای حذف نمی‌شود (جدول‌ها، optionها، نقش، لاگ‌ها باقی می‌مانند)
+```
 
----
+### حذف (Uninstall) — `RCS_Core_Uninstaller::uninstall()`
 
-## 6. خطاهای Raised شده و رفع شده
+```text
+uninstall.php  (WP_UNINSTALL_PLUGIN تعریف می‌شود) → plugin.php (بدون بوت) → uninstall()
+  1. لغو کرون‌ها
+  2. حذف کوپن‌های ووکامرس که متای _rcs_managed_coupon دارند (فقط همین‌ها)
+  3. حذف ۷ جدول
+  4. حذف optionها + transient
+  5. حذف کپسیتی‌ها از administrator
+  6. حذف نقش rcs_expert
+```
 
-| خطا | علت | رفع |
-|-----|------|-----|
-| `Serialization of 'Closure' is not allowed` | `register_uninstall_hook` با closure | تغییر به static method callback |
-| `ParseError: unexpected token "private"` | `{` اضافی در `Activator.php` | حذف `{` اضافی |
-| `Cannot redeclare elementor_fail_php_version()` | المنتور دو بار لود می‌شود (رایگان + Pro) | **نه خطای افزونه ما** — نیاز به حذف/install مجدد المنتور |
-
----
-
-## 7. حالت فعلی کد
-
-- افزونه **نصب و فعال شده است** (تأیید شده در `wp-content/debug.log` با لاگ‌های `RCS: activation completed`)
-- فعال‌سازی با موفقیت انجام می‌شود؛ جدول‌ها، نقش‌ها، تنظیمات ایجاد می‌شوند
-- خطای الوحيد باقی‌مانده از **عنصر المنتور** است (تکرار تابع در فایل خود المنتور)، وابسته به نصب دुभل المنتور نیست
-
----
-
-## 8. electro (Elementor) Integration
-
-`elementor/Elementor.php`:
-- `init()` بررسی می‌کند `Elementor\Plugin` وجود داشته باشد قبل ثبت هوک‌ها
-- `try-catch` در sekitar ثبت هوک‌ها
-- `register_widgets()` فقط اگر `RCS_Elementor_FormWidget` وجود داشته باشد اجرا می‌شود
-
-`elementor/widgets/FormWidget.php`:
-- کلاس `RCS_Elementor_FormWidget extends \Elementor\Widget_Base`
-- `get_categories()` اگر دسته `rcs` ثبت نشده باشد، به `general` بازمی‌گردد تا خطای دسته نامشخص در المنتور 4.x را tránh کند
-
-`includes/Core/Plugin.php::init_elementor()`:
-- در `try-catch` لRFاف شده است
+> **نکته مهم:** `Installer::maybe_upgrade()` فقط وقتی جدول‌ها را می‌سازد که option `rcs_version` موجود باشد. به این ترتیب بعد از uninstall، بارگذاری مجدد وردپرس دوباره جدول‌ها را نمی‌سازد (این رگرسیون تست شده است).
 
 ---
 
-## 9. دستورالعمل برای توسعه بخش‌های بعدی
+## ۶. مدل داده (دقیقاً همان چیزی که ساخته می‌شود)
 
-### مراحل پیشنهادی
-1. **estore** کد از گیت (حالت کامیت شده)
-2. فعال‌سازی افزونه در سایت آزمایشی با وردپرس 6.0+ و ووکامرس 7.0+
-3. بررسی `wp-content/debug.log` برای لاگ‌های `RCS:`
-4. شروع پیاده‌سازی ماژول‌هاone by one:
-   - `Forms/FormManager.php` — ساخت فرم
-   - `Requests/RequestManager.php` — ثبت درخواست
-   - `Approval/ApprovalManager.php` — تایید specialist
-   - `Coupons/CouponManager.php` — کد تخفیف WooCommerce
-   - `SMS/SmsManager.php` — اعلان SMS.ir
-5. هر کلاس جدید باید با prefix `RCS_` و در مسیر صحیح در `includes/` باشد و به autoloader map در `plugin.php` اضافه شود.
+| جدول | کلید اصلی | ستون‌های کلیدی |
+|------|-----------|----------------|
+| `rcs_forms` | `id` | name, status, settings, created_by, created_at, updated_at |
+| `rcs_form_fields` | `field_id` | form_id, field_type, field_key, label, options, validation, conditional_logic, step, sort_order, field_settings |
+| `rcs_requests` | `request_id` | form_id, user_id, current_revision_id, status, created_at, updated_at, approved_at, rejected_at |
+| `rcs_request_revisions` | `revision_id` | request_id, revision_number, submitted_by, submitted_data, status, created_at, submitted_at, rejection_reason |
+| `rcs_plugin_coupons` | `id` | request_id (**UNIQUE**), user_id, wc_coupon_id, coupon_code, created_at, approved_at, disabled_at |
+| `rcs_sms` | `id` | request_id, user_id, recipient, sms_type, pattern_id, params, status, provider_response, error_message, retry_count, created_at, sent_at, last_retry_at |
+| `rcs_logs` | `id` | actor_user_id, actor_role, action, request_id, revision_id, coupon_id, sms_id, ip_address, result, error_message, created_at |
 
-### قوانین کدنویسی
-- همه کلاس‌ها `singleton` باشند (متد `instance()`،构造\_privated)
-- نام کلاس‌ها با `RCS_` شروع شوند
-- نام فایل‌ها با نام کلاس مطابقت داشته باشند
-- از `try-catch (\Throwable)` در تمام نقاطی که با وردپرس/عنصر‌های خارجی تعامل دارند استفاده شود
-- تماس مستقیم با `$wpdb` فقط در کلاس‌های `Database/` و `Logs/`
-- هیچ کامنت فارسی/انگلیسی در کد PHP ننویسید (برخلاف این فایل markdown)
+قید `UNIQUE KEY coupon_request_id (request_id)` در `rcs_plugin_coupons` **قانون «یک کوپن برای هر درخواست» را در سطح دیتابیس** تضمین می‌کند.
+
+ستون‌های زمانی از نوع `datetime NULL DEFAULT NULL` هستند (نه zero-date) تا با `sql_mode` سخت‌گیرانه MySQL 8 / MariaDB سازگار باشد.
 
 ---
 
-## 10. فایل‌های کلی برای مراجعه سریع
+## ۷. قراردادهای ثابت
 
-| کار | فایل |
-|-----|------|
-| نقطه ورود / autoloader / هوک‌ها | `plugin.php` |
-| ऑर्कستراتور در `plugins_loaded` | `includes/Core/Plugin.php` |
-| عملیات نصب (جداول، نقش، تنظیمات) | `includes/Core/Activator.php` |
-| ساختار دیتابیس (dbDelta) | `includes/Database/Schema.php` |
-| بررسی پیش‌نیازها | `includes/Core/Requirements.php` |
-| پاک‌سازی در uninstall | `includes/Core/Uninstaller.php` |
-| ویجت المنتور | `elementor/widgets/FormWidget.php` |
-| استاداتارضی | `ai-context.md` (این فایل) |
+### ۷.۱ کپسیتی‌ها
+
+| کپسیتی | نقش |
+|---------|------|
+| `rcs_manage_forms` | مدیریت فرم‌ها |
+| `rcs_manage_requests` | مدیریت درخواست‌ها |
+| `rcs_manage_coupons` | مدیریت کوپن‌ها |
+| `rcs_manage_sms` | مدیریت پیامک‌ها (شامل retry) |
+| `rcs_view_reports` | مشاهده گزارش‌ها |
+| `rcs_manage_settings` | تنظیمات |
+| `rcs_view_logs` | مشاهده لاگ‌ها |
+| `rcs_review_requests` | بررسی درخواست (نقش کارشناس) |
+| `rcs_approve_requests` | تأیید درخواست (نقش کارشناس) |
+| `rcs_reject_requests` | رد درخواست (نقش کارشناس) |
+
+> **تصمیم موقت:** فقط نقش `rcs_expert` کپسیتی‌های تأیید/رد را دارد و مدیر (administrator) ندارد. این بند در سند معماری «تعیین‌نشده» بود؛ اگر مدیر هم باید تأیید کند، کافی است در `RCS_Core_Plugin::admin_capabilities()` سه کپسیتی کارشناس اضافه شود.
+
+### ۷.۲ هوک‌ها و کرون‌ها
+
+| هوک | نوع | کاربرد |
+|------|------|--------|
+| `activate_{plugin}` | action | `RCS_Core_Activator::activate` |
+| `deactivate_{plugin}` | action | `RCS_Core_Deactivator::deactivate` |
+| `init` (0) | action | بارگذاری textdomain |
+| `plugins_loaded` (20) | action | راه‌اندازی ماژول‌ها |
+| `admin_menu` | action | ثبت منوی پنل |
+| `admin_notices` | action | نمایش خطاهای پیش‌نیاز |
+| `wp_enqueue_scripts` | action | رجیستر assets فرانت |
+| `elementor/widgets/register` | action | ثبت ویجت فرم |
+| `woocommerce_init` | action | شروع قلاب‌های ووکامرس |
+| `rcs_coupon_expiry_reminder` | cron (روزانه) | یادآوری انقضای کوپن |
+| `rcs_sms_retry` | cron (ساعتی) | تلاش مجدد پیامک ناموفق |
+
+### ۷.۳ Optionها
+
+| Option | محتوا |
+|--------|--------|
+| `rcs_db_version` | نسخه اسکیمای دیتابیس (`1.0.0`) |
+| `rcs_version` | نسخه افزونه — نشانه فعال بودن |
+| `rcs_sms_settings` | api_key, pattern_ids, sender_line, admin_numbers |
+| `rcs_general_settings` | تنظیمات عمومی |
+| `rcs_requirements_errors` (transient) | خطاهای پیش‌نیاز (۱ ساعت) |
+| `rcs_sms_parameters` | نگاشت نام پارامتر هر نوع پیامک به نام پارامتر در قالب سرویس‌دهنده |
+| `rcs_roles_version` | نسخه کپسیتی/نقش‌ها (`1.0.1`)، برای به‌روزرسانی نقش‌ها در نصب‌های موجود |
+
+### ۷.۲.۱ بارگذاری ترجمه
+
+افزونه ترجمه فارسی را ارسال می‌کند و رابط کاربری افزونه **همیشه به زبان فارسی** نمایش داده می‌شود، هرچند locale سایت متفاوت باشد. بارگذاری در `RCS_Core_Plugin::load_textdomain()` روی `init` صورت می‌گیرد و به دلیل حذف فیلتر `plugin_locale` در وردپرس ۶.۷+، برای دامنه `request-coupon-system` از فیلتر `gettext_request-coupon-system` استفاده شده تا فهرست ترجمه (`.mo`) هرچند locale سایت، اعمال شود. این تغییر فقط دامنه افزونه را تحت تأثیر قرار می‌دهد و سایر دامنه‌ها (ورودپرس، ووکامرس، المنتور) تحت تأثیر قرار نمی‌گیرند.
+
+### ۷.۴ وضعیت‌ها
+
+```text
+Request: rcs draft | pending | rejected | approved
+SMS:     pending | sent | failed
+```
 
 ---
 
-> پایان سند. هر ایجنت بعدی باید این فایل را بخواند قبل از هر تغییر در کد افزونه.
+## ۸. قواعد معماری (الزامی)
+
+### ۸.۱ وابستگی مجاز
+
+```text
+Forms → Requests      Requests → Revisions     Approval → Requests
+Approval → Coupons    Approval → SMS           Coupons → WooCommerce
+SMS → SMS.ir          Elementor → Forms
+```
+
+### ۸.۲ وابستگی ممنوع
+
+```text
+Forms → Coupons        Forms → SMS          Coupons → SMS
+SMS → Request logic    Elementor → Coupons  Elementor → SMS
+```
+
+### ۸.۳ قواعد کدنویسی
+
+1. همه کلاس‌ها `final` و singleton با `instance()` و constructor خصوصی (کلاس‌های utility مثل `Activator` فقط متد static دارند).
+2. نام کلاس = `RCS_<Module>_<ClassName>`؛ نام فایل = نام کلاس بدون پیشوند.
+3. **هیچ کامنتی (فارسی یا انگلیسی) داخل کد PHP ننویسید.** تنها استثنا هدر افزونه در `plugin.php` است.
+4. تماس مستقیم با `$wpdb` فقط در `includes/Database/`، `includes/Logs/` و کلاس‌های `*Repository` (لایه دسترسی داده) مجاز است؛ در کلاس‌های Manager و صفحات ادمین ممنوع است.
+5. هر تعامل با وردپرس/ووکامرس/المنتور/سرویس بیرونی داخل `try { } catch ( \Throwable $e ) { }`.
+6. هر کلاس جدید باید به نقشه `RCS_Autoloader::$map` در `plugin.php` اضافه شود، وگرنه بارگذاری نمی‌شود.
+7. Manager = منطق دامنه. Repository = فقط دسترسی داده (بدون تصمیم کسب‌وکاری).
+8. منطق تکراری ممنوع؛ جریان تأیید فقط در `RCS_Approval_ApprovalManager` است.
+9. کلاس Repository/Manager اضافه نسازید مگر مسئولیت آن در کلاس موجود جا نشود.
+
+### ۸.۴ امنیت (الزامی در همه ماژول‌ها)
+
+```text
+درخواست کاربر:  is_user_logged_in → بررسی مالکیت → بررسی وضعیت → عملیات
+عملیات کارشناس: current_user_can( rcs_* ) → بررسی دسترسی → عملیات
+عملیات مدیر:    current_user_can( rcs_manage_* ) → nonce → sanitize → عملیات
+```
+
+- همیشه `wp_verify_nonce` برای عملیات POST/AJAX
+- ورودی: `sanitize_text_field` / `sanitize_key` / `absint`
+- خروجی: `esc_html` / `esc_attr` / `esc_url`
+- هر عملیات مهم مدیریتی → `RCS_Logs_LogManager::instance()->log()`
+
+---
+
+## ۹. قواعد کسب‌وکار (قابل پیاده‌سازی در فاز بعد)
+
+### ۹.۱ وضعیت درخواست
+
+| وضعیت | ویرایش‌پذیر | رفتار |
+|-------|-------------|-------|
+| `draft` | بله | پیش‌نویس |
+| `pending` | خیر (در انتظار بررسی) | قابل تأیید/رد |
+| `rejected` | بله | ویرایش → ساخت Revision جدید → `pending` |
+| `approved` | خیر (قفل) | بدون Revision جدید، بدون تأیید مجدد، بدون کوپن دوم |
+
+هر resubmit یک Revision جدید می‌سازد و **تاریخچه نسخه‌های قبلی هرگز بازنویسی نمی‌شود**. کوپن به Request تعلق دارد، نه به Revision.
+
+### ۹.۲ جریان تأیید
+
+```text
+ApprovalManager
+  → ApprovalValidator (وجود، وضعیت، تأیید‌نشدن قبلی، صحت revision، کاربر، درصد و سقف تخفیف)
+  → CouponManager → WooCommerceCoupon (ساخت کوپن در ووکامرس)
+  → ذخیره رابطه در rcs_plugin_coupons
+  → Request = approved + قفل
+  → ساخت دو رکورد SMS (مشتری + مدیر) → SmsSender → SmsIrClient
+```
+
+- اگر ساخت کوپن شکست خورد → **هیچ SMS ارسال نمی‌شود** و درخواست تأییدشده محسوب نمی‌شود.
+- اگر کوپن ساخته شد ولی SMS شکست خورد → کوپن معتبر است، Request تأییدشده است، SMS قابل retry است.
+- تأیید باید **idempotent** باشد (اجرای دوباره = کوپن دوم ممنوع).
+
+### ۹.۳ قواعد کوپن
+
+- درصد تخفیف، روی همه محصولات، همه دسته‌ها، شامل محصولات تخفیف‌دار
+- بدون حداقل خرید، individual use، limit استفاده کلی = ۱، limit استفاده هر کاربر = ۱
+- محدود به User ID دقیق صاحب کوپن و غیرقابل انتقال
+- انقضا = دقیقاً ۷ × ۲۴ ساعت پس از تأیید
+- یک Request = یک کوپن؛ یک کاربر می‌تواند از طریق Requestهای مختلف کوپن‌های نامحدود بگیرد
+- مالکیت در `rcs_plugin_coupons` نگهداری و در اعتبارسنجی بررسی می‌شود
+- **الزامی برای فاز بعد:** هنگام ساخت کوپن، متای `_rcs_managed_coupon` روی پست کوپن ووکامرس ثبت شود؛ `RCS_Core_Uninstaller` فقط کوپن‌هایی را حذف می‌کند که این متا را دارند تا کوپن‌های دست‌نخورده ووکامرس آسیب نبینند.
+
+### ۹.۴ انواع پیامک
+
+| نوع | گیرنده | قابل retry |
+|-----|---------|-------------|
+| `approval_customer` | مشتری | (تصمیم‌نشده — بند ۱۰) |
+| `approval_admin` | مدیر | (تصمیم‌نشده) |
+| `rejection_customer` | مشتری | (تصمیم‌نشده) |
+| `expiry_reminder_customer` | مشتری | (تصمیم‌نشده) |
+
+متن پیامک **هرگز hard-code نمی‌شود**؛ فقط Pattern ID و نگاشت پارامترها ذخیره می‌شود. هر پیامک یک رکورد مستقل است و شکست یکی، دیگری را باطل نمی‌کند. Retry روی **همان رکورد SMS** انجام می‌شود (نه رکورد جدید) و هرگز Request/Revision/Coupons جدید نمی‌سازد.
+
+---
+
+## ۱۰. مواردی که نباید حدس زد (تصمیم‌های باز)
+
+| # | موضوع | وضعیت فعلی |
+|---|--------|------------|
+| ۱ | نام/اسلاگ/پیشوند/namespace نهایی | **قطعی شد**: Request & Coupon System / `RCS_` (همین سند) |
+| ۲ | حداقل نسخه وردپرس | **قطعی شد**: 6.0 (ووکامرس 7.0 اختیاری) |
+| ۳ | حداقل نسخه المنتور | هنوز مشخص نشده — فعلاً اعلام نمی‌شود |
+| ۴ | ثبت‌نام کاربر / OTP | مشخص نشده — پیاده‌سازی نشود |
+| ۵ | آیا مدیر هم می‌تواند تأیید/رد کند | **موقت**: فقط `rcs_expert` (قابل تغییر در یک خط) |
+| ۶ | آیا تغییر کوپن پس از تأیید SMS جدید می‌خواهد | مشخص نشده — فعلاً خیر/بدون پیاده‌سازی |
+| ۷ | آیا کوپن غیرفعال‌شده دوباره فعال می‌شود | مشخص نشده |
+| ۸ | آیا مدیر می‌تواند مهلت ۷ روزه را تغییر دهد | مشخص نشده |
+| ۹ | کدام انواع SMS قابل retry هستند | مشخص نشده (ساختار پشتیبانی می‌کند) |
+| ۱۰ | یک یا چند شماره مدیر | ساختار `admin_numbers` آرایه‌ای است |
+| ۱۱ | MIMEهای مجاز آپلود | مشخص نشده — hard-code نکنید |
+| ۱۲ | حداکثر حجم آپلود | مشخص نشده |
+| ۱۳ | رفتار چند پیش‌نویس همزمان | مشخص نشده |
+| ۱۴ | اپراتورهای منطق شرطی | مشخص نشده |
+| ۱۵ | پیاده‌سازی دقیق زمان‌بند | ساختار کرون ساخته شده، منطق نه |
+| ۱۶ | نیازهای گزارش/خروجی اکسل | مشخص نشده |
+
+> اگر برای پیاده‌سازی یکی از این موارد نیاز شد، **توقف کنید و سؤال کنید** — فرض نکنید.
+
+---
+
+## ۱۱. نقشه راه فاز بعد (به‌ترتیب پیشنهادی)
+
+هر مرحله را جداگانه پیاده و تست کنید. مرحله ۱ انجام شده است.
+
+1. ~~**Forms**~~ — ✅ **انجام شد**: `FormManager` (CRUD) + `FormRepository` + `FieldManager` (۱۰ نوع فیلد) + `SubmissionHandler` + فرم‌ساز پنل + ویجت المنتور
+2. ~~**Requests**~~ — ✅ **انجام شد**: `RequestManager` + `RequestRepository` + `RequestAccess` + `RevisionManager` + `RevisionRepository` + صفحه-list/detail + تایید و رد درخواست با کپسیتی مدیر و کارشناس
+3. ~~**Revisions**~~ — ✅ **انجام شد**: versatile (شماره‌گذاری نسخه، حفظ تاریخچه، کدگذاری داده ارسالی)
+4. ~~**Approval**~~ — ✅ **انجام شد**: `ApprovalValidator` → `ApprovalManager` (کوپن اول، بعد پیامک) + علامت‌گذاری وضعیت درخواست با ماژول Requests + رد درخواست
+5. **Coupons** — ✅ **انجام شد**: `WooCommerceCoupon` (آداپتور API) → `CouponManager` → `CouponValidator` → `CouponOwnership` + صفحه پنل با عملیات غیرفعال‌سازی
+6. **SMS** — ✅ **انجام شد**: `SmsTemplateManager` (انواع و نگاشت پارامتر) → `SmsSender` → `SmsIrClient` (API) → `SmsManager` → `SmsRetry` + صفحه تنظیمات و تاریخچه
+7. **Scheduler** — پیاده‌سازی `run_coupon_expiry_reminder` و `run_sms_retry` (idempotent)
+8. **Reports** — `ReportManager` روی همین جدول‌ها
+9. **Forms (تکمیل)** — منطق شرطی (`ConditionalLogic`)، چندمرحله‌ای (`MultiStepManager`)، اعتبارسنجی پیشرفته (`Validation`) و اتصال endpoint ارسال به ساخت Request
+10. **اعضای اجباری (تکمیل)** — اعمال همان قاعده عضویت در عملیات درخواست‌ها داخل `RCS_Requests_RequestAccess`
+11. **UI** — جایگزینی ویوهای placeholder با رابط واقعی
+
+---
+
+## ۱۲. محیط تست و روال اعتبارسنجی
+
+محیط مرجع تست‌شده: **WordPress 7.1.3 + MariaDB 11.8 + PHP 8.4 + WP-CLI + Elementor 4.3.5 + WooCommerce 11.2.1**.
+
+```bash
+# فعال‌سازی
+wp plugin activate request-coupon-system
+wp db query "SHOW TABLES LIKE 'rcs\_%';"          # باید ۷ جدول باشد
+wp db query "SELECT option_name FROM wp_options WHERE option_name LIKE 'rcs%';"
+wp role list                                       # rcs_expert باید باشد
+wp cron event list --fields=hook                   # rcs_coupon_expiry_reminder, rcs_sms_retry
+
+# بررسی خطاها (WP_DEBUG + WP_DEBUG_LOG باید فعال باشند)
+cat wp-content/debug.log                            # باید خالی باشد
+
+# غیرفعال‌سازی: داده باید باقی بماند
+wp plugin deactivate request-coupon-system
+
+# حذف: uninstall.php وردپرس اجرا می‌شود
+wp eval 'uninstall_plugin("request-coupon-system/plugin.php");'
+```
+
+**قواعد تست:**
+- قبل از هر تست، `wp-content/debug.log` را خالی کنید تا خطاهای قبلی گم نشوند.
+- هر تست جدید باید هم «خروجی بدون خطا» و هم «اثر واقعی در دیتابیس» را بررسی کند.
+- `wp db query` وردپرس را بارگذاری **نمی‌کند**؛ برای تست اثر زمان اجرا از `wp eval` استفاده کنید.
+- `wp plugin delete` قلاب uninstall را اجرا **نمی‌کند**؛ برای تست uninstall از `wp eval 'uninstall_plugin(...)'` استفاده کنید.
+- برای شبیه‌سازی POST در CLI: `$_SERVER['REQUEST_METHOD'] = 'POST'` را ست کنید.
+- برای گرفتن redirect در CLI: فیلتر `wp_redirect` را حذف و با یک closure که exception پرتاب می‌کند جایگزین کنید (`remove_all_filters('wp_redirect')`).
+- برای گرفتن `wp_die` در CLI: فیلتر `wp_die_handler` را با closure‌ای که exception پرتاب می‌کند جایگزین کنید.
+- گزینه‌های کنترل SELECT در المنتور ۴ فقط در زمینه‌ی ادیتور نگهداری می‌شوند؛ در CLI (فرانت) به‌خاطر `Performance::should_optimize_controls()` حذف می‌شوند. برای تست آن‌ها مقدار استاتیک `is_frontend` را با reflection روی `false` بگذارید.
+- تست افزونه باید **دو بار** اجرا شود: یک‌بار با المنتور فعال و یک‌بار با المنتور غیرفعال (برای اطمینان از نبود fatal).
+
+---
+
+## ۱۳. تاریخچه تصمیم‌ها و انحراف‌ها
+
+| موضوع | تصمیم | دلیل |
+|--------|--------|------|
+| نام‌گذاری | `RCS_` به‌جای namespace | قرارداد پروژه در `ai-context.md` نسخه قبلی؛ ساده‌تر برای WP |
+| نام جدول‌ها | `rcs_*` | سند معماری پیشوند را باز گذاشته بود (`{prefix}_plugin_*`)؛ این سند مرجع است |
+| نام فایل `SubmissionHandler` | `includes/Forms/SubmissionHandler.php` | مطابق ساختار مصوب (بدون خط تیره) |
+| خطاهای پیش‌نیاز | transient + notice | فعال‌سازی مسدود نشود؛ گزارش در پنل |
+| بازسازی جدول بعد از uninstall | غیرفعال | با نیازمندی `rcs_version` در `maybe_upgrade()` |
+| کپسیتی تأیید برای مدیر | ندارد (فعلاً) | بند ۱۰ مورد ۵ تعیین‌نشده |
+| ادمین‌پنل | منو + ۶ صفحه با ویوی placeholder | بدون UI نهایی در این فاز |
+| وضعیت فرم | `draft` / `published` | ویجت المنتور فقط فرم‌های `published` را نشان می‌دهد |
+| بارگذاری ویجت المنتور | کلاس داخل `if ( class_exists( '\Elementor\Widget_Base' ) )` | بدون المنتور نباید fatal بدهد (باگ واقعی که در تست کشف شد) |
+| `is_dynamic_content()` | با امضای `: bool` | امضای والد در المنتور ۴.۳.۵ `: bool` دارد و ناسازگاری باعث fatal می‌شد |
+| دسته ویجت المنتور | `rcs` از طریق `elementor/elements/categories_registered` | در المنتور ۴.x taxonomy قدیمی دسته‌ها حذف شده است |
+| استفاده از `$wpdb` | در `*Repository` و `SmsManager` هم مجاز | ماژول SMS در ساختار مصوب Repository ندارد، پس دسترسی داده در خود `SmsManager` است (بند ۳۴ سند معماری) |
+| خط ارسال (Sender line) | **اختیاری**، بدون ستاره و بدون `required` | درخواست کاربر؛ ارسال Pattern از خط خدماتی پنل انجام می‌شود و پارامتری به نام خط ارسال در API وجود ندارد |
+| متن پیامک | ذخیره یا ارسال نمی‌شود | بند ۱۸ سند معماری: فقط Pattern ID و نگاشت پارامتر |
+| endpoint سرویس‌دهنده | `POST /v1/send/verify` با هدر `x-api-key` | مستندات رسمی SMS.ir؛ تنها متد مبتنی بر Pattern |
+| ارسال فرم | فقط برای کاربر واردشده، سراسری | درخواست کاربر؛ مهمان به صفحه ورود هدایت می‌شود و فرم رندر نمی‌شود |
+| ترتیب بررسی امنیتی | احراز هویت قبل از nonce | nonce کاربر واردنشده هم معتبر است؛ بند ۳۸ سند معماری |
+| محدودیت کوپن | ایمیل در ووکامرس + لایه مالکیت با User ID | ووکامرس ۱۱.x محدودیت User ID ندارد؛ بند ۱۴ سند معماری |
+| کد کوپن | تصادفی ۱۲ کاراکتری، بررسی یکتایی در همه وضعیت‌ها | درخواست کاربر: کدها نباید یکسان باشند |
+| غیرفعال‌سازی کوپن | `set_status('trash')` با کپسیتی `rcs_manage_coupons` | روش رسمی ووکامرس؛ کوپن حذف نمی‌شود |
+| ترتیب کوپن و پیامک | **اول کوپن، بعد پیامک** | خواسته کاربر: تا ساخته‌نشدن کد تخفیف هیچ پیامکی ارسال نشود |
+| شکست پیامک | کوپن باقی می‌ماند، وضعیت پیامک `failed`، تلاش مجدد بدون کوپن جدید | خواسته کاربر |
+| کپسیتی تأیید | `rcs_approve_requests` لازم است | نقش `rcs_expert` آن را دارد؛ بند ۱۰ مورد ۵ هنوز تعیین‌نشده (مدیر فعلاً ندارد) |
+| شماره موبایل مشتری | آرگومان صریح `customer_mobile` | منبع ذخیره‌شده‌ی شماره در ماژول Requests هنوز وجود ندارد |
+| هدرهای SMS.ir | `X-API-KEY` + `Accept: application/json` | هم‌راستا با SDK رسمی `IPeCompany/smsir-php` |
+
+---
+
+> پایان سند. پیش از هر تغییری این فایل را بخوانید و پس از هر تغییر معنادار، بخش‌های مرتبط (۳، ۶، ۷، ۱۳) را به‌روز کنید.
